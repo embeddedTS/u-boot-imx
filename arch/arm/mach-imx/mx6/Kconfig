@@ -410,6 +410,19 @@ config TARGET_MX6UL_ENGICAM
 	select SUPPORT_SPL
 	imply CMD_DM
 
+config TARGET_TS7100
+	bool "Support for Technologic Systems TS-7100"
+	select MX6UL
+	select BOARD_LATE_INIT
+	select DM
+	select DM_ETH
+	select DM_GPIO
+	select DM_I2C
+	select DM_MMC
+	select DM_SERIAL
+	select DM_THERMAL
+	select SUPPORT_SPL
+
 config TARGET_TS7250V3
 	bool "Support for embeddedTS TS-7250-V3"
 	select MX6UL
@@ -676,6 +689,7 @@ source "board/sks-kinkel/sksimx6/Kconfig"
 source "board/solidrun/mx6cuboxi/Kconfig"
 source "board/technexion/pico-imx6/Kconfig"
 source "board/technexion/pico-imx6ul/Kconfig"
+source "board/technologic/ts7100/Kconfig"
 source "board/technologic/ts7250v3/Kconfig"
 source "board/tbs/tbs2910/Kconfig"
 source "board/tqc/tqma6/Kconfig"
