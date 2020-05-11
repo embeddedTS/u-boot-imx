@@ -539,6 +539,24 @@ int board_eth_init(bd_t *bis)
 		}
 	}
 
+	/* Linux FEC driver needs enetaddr set in FTD. Custom Freescale/NXP
+	 * patches will read this from OTP and self-modify the booted FDT early
+	 * boot. To support mainline, export both eth0 and eth1 MAC to U-Boot
+	 * env. The TS-4100 is assigned two MAC addresses, the second is just
+	 * +1 from the first. Ensure that all the lower 3 btyes are properly
+	 * adjusted for rollover.
+	 */
+	if (enetaddr[5] == 0xff) {
+		if (enetaddr[4] == 0xff) {
+			enetaddr[3]++;
+		}
+		enetaddr[4]++;
+	}
+	enetaddr[5]++;
+	if (eth_setenv_enetaddr("eth1addr", enetaddr)) {
+		printf("Failed to set eth1addr\n");
+	}
+
 	return ret;
 }
 
