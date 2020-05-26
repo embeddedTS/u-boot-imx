@@ -537,6 +537,10 @@ config ARCH_SUNXI
 	select USB_STORAGE
 	select USB_KEYBOARD
 
+config TARGET_TSMFLOW
+	bool "Support TS-MFlow"
+	select CPU_V7
+
 config TARGET_TS4100
 	bool "Support TS4100"
 	select CPU_V7
@@ -872,6 +876,7 @@ source "board/ti/ti816x/Kconfig"
 source "board/timll/devkit3250/Kconfig"
 source "board/toradex/colibri_pxa270/Kconfig"
 source "board/toradex/colibri_vf/Kconfig"
+source "board/technologic/tsmflow/Kconfig"
 source "board/technologic/ts4100/Kconfig"
 source "board/technologic/ts4800/Kconfig"
 source "board/technologic/ts7100/Kconfig"

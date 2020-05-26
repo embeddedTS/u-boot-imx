@@ -74,6 +74,16 @@ ts7553v2)
 	fi
 	;;
 
+tsmflow)
+	make tsmflow_defconfig
+	make -j9 u-boot.imx
+	if [ $? -eq 0 ]; then
+		mv u-boot.imx out/u-boot-tsmflow-512m.imx
+	else
+		let FAIL=FAIL+1
+	fi
+	;;
+
 *)
 	echo "Usage: ./build-imx6ul.sh <model>"
 	exit 1
