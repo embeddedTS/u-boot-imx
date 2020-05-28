@@ -27,7 +27,18 @@
  *	The number of receive packet buffers, and the required packet buffer
  *	alignment in memory.
  *
+ *	The number of buffers for TCP is used to calculate a static TCP window
+ *	size, becuse TCP window size is a promise to the sending TCP to be able
+ *	to buffer up to the window size of data.
+ *	When the sending TCP has a window size of outstanding unacknowledged
+ *	data, the sending TCP will stop sending.
  */
+
+
+#if defined(CONFIG_TCP)
+#define CONFIG_SYS_RX_ETH_BUFFER 12	/* For TCP */
+#endif
+
 
 #ifdef CONFIG_SYS_RX_ETH_BUFFER
 # define PKTBUFSRX	CONFIG_SYS_RX_ETH_BUFFER
@@ -347,6 +358,7 @@ struct vlan_ethernet_hdr {
 #define PROT_PPP_SES	0x8864		/* PPPoE session messages	*/
 
 #define IPPROTO_ICMP	 1	/* Internet Control Message Protocol	*/
+#define IPPROTO_TCP	 6	/* Transmission Control Protocol        */
 #define IPPROTO_UDP	17	/* User Datagram Protocol		*/
 
 /*
@@ -532,7 +544,7 @@ extern int		net_restart_wrap;	/* Tried all network devices */
 
 enum proto_t {
 	BOOTP, RARP, ARP, TFTPGET, DHCP, PING, DNS, NFS, CDP, NETCONS, SNTP,
-	TFTPSRV, TFTPPUT, LINKLOCAL, FASTBOOT, WOL
+	TFTPSRV, TFTPPUT, LINKLOCAL, FASTBOOT, WOL, WGET
 };
 
 extern char	net_boot_file_name[1024];/* Boot File name */
@@ -671,10 +683,15 @@ static inline void net_send_packet(uchar *pkt, int len)
  * @param dport Destination UDP port
  * @param sport Source UDP port
  * @param payload_len Length of data after the UDP header
+ * @param action TCP action to be performed
+ * @param tcp_seq_num TCP sequence number of this transmission
+ * @param tcp_ack_num TCP stream acknolegement number
  */
 int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 		       int payload_len, int proto, u8 action, u32 tcp_seq_num,
 		       u32 tcp_ack_num);
+int net_send_tcp_packet(int payload_len, int dport, int sport, u8 action,
+			u32 tcp_seq_num, u32 tcp_ack_num);
 int net_send_udp_packet(uchar *ether, struct in_addr dest, int dport,
 			int sport, int payload_len);
 
