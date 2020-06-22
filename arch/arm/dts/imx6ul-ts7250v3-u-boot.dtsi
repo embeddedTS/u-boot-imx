@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright 2020 Technologic Systems
+ */
+
+&{/aliases} {
+	u-boot,dm-pre-reloc;
+};
+
+&{/soc} {
+	u-boot,dm-pre-reloc;
+};
+
+&aips2 {
+	u-boot,dm-pre-reloc;
+};
+
+&iomuxc {
+	u-boot,dm-pre-reloc;
+};
+
+&usdhc1 {
+	u-boot,dm-spl;
+};
+
+&usdhc2 {
+	non-removable;
+};

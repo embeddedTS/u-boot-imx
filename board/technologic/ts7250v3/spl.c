@@ -11,17 +11,23 @@
 #include <asm/arch/mx6-pins.h>
 #include <asm/arch/mx6ul_pins.h>
 #include <asm/arch/sys_proto.h>
+#include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <fsl_esdhc_imx.h>
 #include <linux/libfdt.h>
 
+#include "tsfpga.h"
+
 #define EIM_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
 
 #define MISC_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
 
-#define MISC_PAD_PU_CTRL (PAD_CTL_PUS_100K_UP | PAD_CTL_PKE | PAD_CTL_PUE | \
-	PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
+#define MISC_PAD_PU_CTRL (MISC_PAD_CTRL | PAD_CTL_PUS_100K_UP | PAD_CTL_PKE | \
+	PAD_CTL_PUE)
+
+#define MISC_PAD_PD_CTRL (MISC_PAD_CTRL | PAD_CTL_PUS_100K_DOWN | PAD_CTL_PKE | \
+	PAD_CTL_PUE)
 
 #define UART_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |		\
@@ -66,12 +72,21 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_NAND_RE_B__GPIO4_IO00 | MUX_PAD_CTRL(MISC_PAD_CTRL),
 	/* DETECT_94-120 */
 	MX6_PAD_NAND_WE_B__GPIO4_IO01 | MUX_PAD_CTRL(MISC_PAD_CTRL),
+	/* SYS_RESET */
+	MX6_PAD_LCD_DATA17__GPIO3_IO22 | MUX_PAD_CTRL(MISC_PAD_PD_CTRL),
 };
+
+#define SYS_RESET_GPIO	IMX_GPIO_NR(3, 22)
 
 static void early_init(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
+
+	gpio_request(SYS_RESET_GPIO, "sys-reset");
+	gpio_direction_output(SYS_RESET_GPIO, 0);
+	mdelay(10);
+	gpio_set_value(SYS_RESET_GPIO, 1);
 }
 
 void board_setup_eim(void)
@@ -80,6 +95,7 @@ void board_setup_eim(void)
 	struct mxc_ccm_reg *const imx_ccm =
 		(struct mxc_ccm_reg *)CCM_BASE_ADDR;
 	u32 reg;
+	int i;
 
 	reg = __raw_readl(&imx_ccm->CCGR6);
 	reg |= MXC_CCM_CCGR6_EMI_SLOW_MASK;
@@ -105,43 +121,58 @@ void board_setup_eim(void)
 	writel(0x00000E09, &weim_regs->wcr);
 
 	set_chipselect_size(CS0_128);
+
+	/* Wait for sane fpga, should take 62ms */
+	for (i = 0; i < 100; i++) {
+		if(readl(FPGA_SYSCON) == 0xbabe)
+			break;
+		mdelay(1);
+	}
+	if(i == 99) printf("FPGA timed out!\n");
 }
 
 static struct mx6ul_iomux_grp_regs mx6_grp_ioregs = {
-	.grp_addds = 0x00000030,
+	.grp_addds = 0x00000028,
 	.grp_ddrmode_ctl = 0x00020000,
-	.grp_b0ds = 0x00000030,
-	.grp_ctlds = 0x00000030,
-	.grp_b1ds = 0x00000030,
+	.grp_b0ds = 0x00000028,
+	.grp_ctlds = 0x00000028,
+	.grp_b1ds = 0x00000028,
 	.grp_ddrpke = 0x00000000,
 	.grp_ddrmode = 0x00020000,
-	.grp_ddr_type = 0x00080000,
+	.grp_ddr_type = 0x000C0000,
 };
 
 static struct mx6ul_iomux_ddr_regs mx6_ddr_ioregs = {
-	.dram_dqm0 = 0x00000030,
-	.dram_dqm1 = 0x00000030,
-	.dram_ras = 0x00000030,
-	.dram_cas = 0x00000030,
-	.dram_odt0 = 0x00000030,
-	.dram_odt1 = 0x00000030,
+	.dram_dqm0 = 0x00000028,
+	.dram_dqm1 = 0x00000028,
+	.dram_ras = 0x00000028,
+	.dram_cas = 0x00000028,
+	.dram_odt0 = 0x00000028,
+	.dram_odt1 = 0x00000028,
 	.dram_sdba2 = 0x00000000,
-	.dram_sdclk_0 = 0x00000030,
-	.dram_sdqs0 = 0x00000030,
-	.dram_sdqs1 = 0x00000030,
-	.dram_reset = 0x00000030,
+	.dram_sdclk_0 = 0x00000028,
+	.dram_sdqs0 = 0x00000028,
+	.dram_sdqs1 = 0x00000028,
+	.dram_reset = 0x00000028,
 };
 
 static struct mx6_mmdc_calibration ts7250v3_512m_calibration = {
-	.p0_mpwldectrl0 = 0x00050000,
-	.p0_mpdgctrl0 = 0x01480144,
-	.p0_mprddlctl = 0x40404E52,
-	.p0_mpwrdlctl = 0x4040504E,
+	.p0_mpwldectrl0 = 0x00000000,
+	.p0_mpdgctrl0 = 0x01480148,
+	.p0_mprddlctl = 0x40405050,
+	.p0_mpwrdlctl = 0x4040504C,
 };
 
-struct mx6_ddr_sysinfo ts7250v3_512m_sysinfo = {
+static struct mx6_mmdc_calibration ts7250v3_1g_calibration = {
+	.p0_mpwldectrl0 = 0x000F0005,
+	.p0_mpdgctrl0 = 0x01580154,
+	.p0_mprddlctl = 0x40404E52,
+	.p0_mpwrdlctl = 0x40404E48,
+};
+
+struct mx6_ddr_sysinfo ts7250v3_sysinfo = {
 	.dsize = 0, /* 16-bit bus */
-	.cs_density = 32, /* actually 512MB */
+	.cs_density = 32, /* actually 512MB/1G */
 	.ncs = 1,
 	.cs1_mirror = 0,
 	.rtt_wr = 0,
@@ -170,6 +201,19 @@ static struct mx6_ddr3_cfg ts7250v3_512m_ddr = {
 	.trasmin = 3500,
 };
 
+static struct mx6_ddr3_cfg ts7250v3_1g_ddr = {
+	.mem_speed = 800,
+	.density = 8,
+	.width = 16,
+	.banks = 8,
+	.rowaddr = 16,
+	.coladdr = 10,
+	.pagesz = 2,
+	.trcd = 1375,
+	.trcmin = 4875,
+	.trasmin = 3500,
+};
+
 static void ccgr_init(void)
 {
 	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -186,10 +230,20 @@ static void ccgr_init(void)
 
 static void spl_dram_init(void)
 {
-	mx6ul_dram_iocfg(ts7250v3_512m_ddr.width, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	mx6_dram_cfg(&ts7250v3_512m_sysinfo,
-		     &ts7250v3_512m_calibration,
-		     &ts7250v3_512m_ddr);
+	uint32_t reg = readl(FPGA_SYSCON + 0x10);
+
+	mx6ul_dram_iocfg(16, &mx6_ddr_ioregs, &mx6_grp_ioregs);
+	if(reg & 0x10000) {
+		/* 4Gb Alliance AS4C256M16D3LB */
+		mx6_dram_cfg(&ts7250v3_sysinfo,
+			     &ts7250v3_512m_calibration,
+			     &ts7250v3_512m_ddr);
+	} else {
+		/* 8Gb Alliance AS4C512M16D3L-12BCN */
+		mx6_dram_cfg(&ts7250v3_sysinfo,
+			     &ts7250v3_1g_calibration,
+			     &ts7250v3_1g_ddr);
+	}
 }
 
 void board_init_f(ulong dummy)
@@ -199,14 +253,15 @@ void board_init_f(ulong dummy)
 	timer_init();
 	early_init();
 	preloader_console_init();
-	spl_dram_init();
 	board_setup_eim();
+	spl_dram_init();
 	memset(__bss_start, 0, __bss_end - __bss_start);
 	board_init_r(NULL, 0);
 }
 
-static struct fsl_esdhc_cfg usdhc_cfg[1] = {
+static struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC1_BASE_ADDR, 0, 4},
+	{USDHC2_BASE_ADDR, 0, 4},
 };
 
 int board_mmc_getcd(struct mmc *mmc)
@@ -227,9 +282,34 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 	MX6_PAD_SD1_DATA3__USDHC1_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
+static iomux_v3_cfg_t const usdhc2_pads[] = {
+	MX6_PAD_LCD_DATA18__USDHC2_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_LCD_DATA19__USDHC2_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_LCD_DATA20__USDHC2_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_LCD_DATA21__USDHC2_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_LCD_DATA22__USDHC2_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_LCD_DATA23__USDHC2_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX6_PAD_GPIO1_IO04__GPIO1_IO04 | MUX_PAD_CTRL(MISC_PAD_PD_CTRL),
+};
+
+#define USDHC2_PWR_GPIO	IMX_GPIO_NR(1, 4)
+
 int board_mmc_init(bd_t *bis)
 {
+	int ret;
+
 	imx_iomux_v3_setup_multiple_pads(usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
+	imx_iomux_v3_setup_multiple_pads(usdhc2_pads, ARRAY_SIZE(usdhc2_pads));
 	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
-	return fsl_esdhc_initialize(bis, &usdhc_cfg[0]);
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
+
+	gpio_request(USDHC2_PWR_GPIO, "sd pwr");
+	gpio_direction_output(USDHC2_PWR_GPIO, 0);
+	udelay(500);
+	gpio_set_value(USDHC2_PWR_GPIO, 1);
+
+	ret = fsl_esdhc_initialize(bis, &usdhc_cfg[0]);
+	ret |= fsl_esdhc_initialize(bis, &usdhc_cfg[1]);
+
+	return ret;
 }

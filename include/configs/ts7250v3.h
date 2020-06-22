@@ -23,9 +23,7 @@
 
 /* MMC Configs */
 #ifdef CONFIG_FSL_USDHC
-#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR
-
-/* NAND pin conflicts with usdhc2 */
+#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC1_BASE_ADDR
 #define CONFIG_SYS_FSL_USDHC_NUM	2
 #endif
 
@@ -33,6 +31,7 @@
 
 #define BOOT_TARGET_DEVICES(func) \
 	func(USB, usb, 0) \
+	func(MMC, mmc, 1) \
 	func(MMC, mmc, 0) \
 	func(DHCP, dhcp, na)
 
@@ -90,7 +89,6 @@
 /* environment organization */
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_SYS_MMC_ENV_PART		1	/* boot0 */
-#define CONFIG_MMCROOT			"/dev/mmcblk1p1"  /* USDHC2 */
 
 /* I2C Configs */
 #define CONFIG_SYS_I2C_MXC

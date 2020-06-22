@@ -262,19 +262,12 @@ int board_late_init(void)
 {
 	uint32_t opts;
 
-	/* Need to read latched FPGA value
-	 * bits 3:0 are FPGA GPIO bank 3, 5:2 and are purely straps
-	 * bits 5:4 are FPGA GPIO bank 3, 12:11 and are DIO_18:DIO_17
-	 * bank 3 12:11 are latched values of DIO_18:DIO_17 after unreset
-	 */
-	opts = readl(0x50004050); /* DIO bank 3 */
-	opts = (((opts & 0x1800) >> 7) | ((opts & 0x3C) >> 2));
-	opts ^= 0x3F;
+	opts = (readl(FPGA_SYSCON + 0x10) >> 17) & 0x1F;
 	env_set_hex("opts", opts);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	env_set("board_name", "TS-7250-V3");
-	env_set("board_rev", "P1");
+	env_set("board_rev", "A");
 #endif
 
 	if(is_mfg()) {
