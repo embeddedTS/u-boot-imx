@@ -74,6 +74,8 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_NAND_WE_B__GPIO4_IO01 | MUX_PAD_CTRL(MISC_PAD_CTRL),
 	/* SYS_RESET */
 	MX6_PAD_LCD_DATA17__GPIO3_IO22 | MUX_PAD_CTRL(MISC_PAD_PD_CTRL),
+	/* FPGA_RESET */
+	MX6_PAD_JTAG_TDI__GPIO1_IO13 | MUX_PAD_CTRL(MISC_PAD_CTRL),
 };
 
 #define SYS_RESET_GPIO	IMX_GPIO_NR(3, 22)
@@ -89,6 +91,7 @@ static void early_init(void)
 	gpio_set_value(SYS_RESET_GPIO, 1);
 }
 
+#define FPGA_RESET_GPIO	IMX_GPIO_NR(1, 13)
 void board_setup_eim(void)
 {
 	struct weim *weim_regs = (struct weim *)WEIM_BASE_ADDR;
@@ -122,13 +125,17 @@ void board_setup_eim(void)
 
 	set_chipselect_size(CS0_128);
 
+	gpio_request(FPGA_RESET_GPIO, "FPGA_RESET");
+	gpio_direction_input(FPGA_RESET_GPIO);
+
 	/* Wait for sane fpga, should take 62ms */
-	for (i = 0; i < 100; i++) {
-		if(readl(FPGA_SYSCON) == 0xbabe)
+	for (i = 0; i < 1000; i++) {
+		if(!gpio_get_value(FPGA_RESET_GPIO))
 			break;
 		mdelay(1);
 	}
-	if(i == 99) printf("FPGA timed out!\n");
+	/* FPGA needs 10-20ns for FPGA state machines to release themselves. */
+	udelay(1);
 }
 
 static struct mx6ul_iomux_grp_regs mx6_grp_ioregs = {
