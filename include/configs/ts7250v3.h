@@ -60,7 +60,7 @@
 		"dhcp;" \
 		"nfs ${fdt_addr_r} ${nfsroot}/boot/" CONFIG_DEFAULT_DEVICE_TREE ".dtb;" \
 		"nfs ${kernel_addr_r} ${nfsroot}/boot/zImage;" \
-		"setenv bootargs root=/dev/nfs rw ip=dhcp nfsroot=${nfsroot} " \
+		"setenv bootargs root=/dev/nfs rw ip=dhcp nfsroot=${nfsroot}${nfsroot_options} " \
 			"loglevel=4 console=${console};" \
 		"bootz ${kernel_addr_r} - ${fdt_addr_r};\0" \
 	BOOTENV
