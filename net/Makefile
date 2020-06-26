@@ -26,6 +26,8 @@ obj-$(CONFIG_CMD_PCAP) += pcap.o
 obj-$(CONFIG_CMD_RARP) += rarp.o
 obj-$(CONFIG_CMD_SNTP) += sntp.o
 obj-$(CONFIG_CMD_TFTPBOOT) += tftp.o
+obj-$(CONFIG_TCP)      += tcp.o
+obj-$(CONFIG_CMD_WGET) += wget.o
 obj-$(CONFIG_UDP_FUNCTION_FASTBOOT)  += fastboot.o
 obj-$(CONFIG_CMD_WOL)  += wol.o
 

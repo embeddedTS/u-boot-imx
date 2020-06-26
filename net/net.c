@@ -122,6 +122,12 @@
 #include "wol.h"
 #endif
 
+#if defined(CONFIG_CMD_WGET)
+#include <net/tcp.h>
+#include <net/wget.h>
+DECLARE_GLOBAL_DATA_PTR;
+#endif
+
 /** BOOTP EXTENTIONS **/
 
 /* Our subnet mask (0=unknown) */
@@ -391,6 +397,10 @@ void net_init(void)
 
 		/* Only need to setup buffer pointers once. */
 		first_call = 0;
+
+#if defined(CONFIG_TCP)
+		tcp_set_tcp_state(TCP_CLOSED);
+#endif
 	}
 
 	net_init_loop();
@@ -499,6 +509,11 @@ restart:
 #if defined(CONFIG_CMD_NFS) && !defined(CONFIG_SPL_BUILD)
 		case NFS:
 			nfs_start();
+			break;
+#endif
+#if defined(CONFIG_CMD_WGET)
+		case WGET:
+			wget_start();
 			break;
 #endif
 #if defined(CONFIG_CMD_CDP)
@@ -817,6 +832,16 @@ int net_send_udp_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 				  IPPROTO_UDP, 0, 0, 0);
 }
 
+#if defined(CONFIG_TCP)
+int net_send_tcp_packet(int payload_len, int dport, int sport, u8 action,
+			u32 tcp_seq_num, u32 tcp_ack_num)
+{
+	return net_send_ip_packet(net_server_ethaddr, net_server_ip, dport,
+				  sport, payload_len, IPPROTO_TCP, action,
+				  tcp_seq_num, tcp_ack_num);
+ }
+#endif
+
 int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 		       int payload_len, int proto, u8 action, u32 tcp_seq_num,
 		       u32 tcp_ack_num)
@@ -824,6 +849,18 @@ int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 	uchar *pkt;
 	int eth_hdr_size;
 	int pkt_hdr_size;
+
+	if (proto == IPPROTO_UDP) {
+		debug_cond(DEBUG_DEV_PKT,
+			   "UDP Send  (to=%pI4, from=%pI4, len=%d)\n",
+			   &dest, &net_ip, payload_len);
+#if defined(CONFIG_TCP)
+	} else {
+		debug_cond(DEBUG_DEV_PKT,
+			   "TCP Send  (%pI4, %pI4, len=%d, A=%x)\n",
+			   &dest, &net_ip, payload_len, action);
+#endif
+	}
 
 	/* make sure the net_tx_packet is initialized (net_init() was called) */
 	assert(net_tx_packet != NULL);
@@ -848,6 +885,14 @@ int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 				   payload_len);
 		pkt_hdr_size = eth_hdr_size + IP_UDP_HDR_SIZE;
 		break;
+#if defined(CONFIG_TCP)
+	case IPPROTO_TCP:
+		pkt_hdr_size = eth_hdr_size +
+		tcp_set_tcp_header(pkt + eth_hdr_size, dport, sport,
+				   payload_len, action,
+				   tcp_seq_num, tcp_ack_num);
+                break;
+#endif
 	default:
 		return -EINVAL;
 	}
@@ -869,7 +914,7 @@ int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 		arp_request();
 		return 1;	/* waiting */
 	} else {
-		debug_cond(DEBUG_DEV_PKT, "sending UDP to %pI4/%pM\n",
+		debug_cond(DEBUG_DEV_PKT, "sending IP packet to %pI4/%pM\n",
 			   &dest, ether);
 		net_send_packet(net_tx_packet, pkt_hdr_size + payload_len);
 		return 0;	/* transmitted */
@@ -1209,9 +1254,11 @@ void net_process_received_packet(uchar *in_packet, int len)
 		/* Can't deal with anything except IPv4 */
 		if ((ip->ip_hl_v & 0xf0) != 0x40)
 			return;
+#if !defined(CONFIG_CMD_WGET)
 		/* Can't deal with IP options (headers != 20 bytes) */
 		if ((ip->ip_hl_v & 0x0f) > 0x05)
 			return;
+#endif
 		/* Check the Checksum of the header */
 		if (!ip_checksum_ok((uchar *)ip, IP_HDR_SIZE)) {
 			debug("checksum bad\n");
@@ -1257,6 +1304,15 @@ void net_process_received_packet(uchar *in_packet, int len)
 		if (ip->ip_p == IPPROTO_ICMP) {
 			receive_icmp(ip, len, src_ip, et);
 			return;
+#if defined(CONFIG_TCP)
+		} else if (ip->ip_p == IPPROTO_TCP) {
+			debug_cond(DEBUG_DEV_PKT,
+				   "TCP PH (to=%pI4, from=%pI4, len=%d)\n",
+				   &dst_ip, &src_ip, len);
+
+			rxhand_tcp_f((union tcp_build_pkt *)ip, len);
+			return;
+#endif
 		} else if (ip->ip_p != IPPROTO_UDP) {	/* Only UDP packets */
 			return;
 		}
@@ -1564,7 +1620,8 @@ int net_parse_bootfile(struct in_addr *ipaddr, char *filename, int max_len)
 
 #if	defined(CONFIG_CMD_NFS)		|| \
 	defined(CONFIG_CMD_SNTP)	|| \
-	defined(CONFIG_CMD_DNS)
+	defined(CONFIG_CMD_DNS)		|| \
+	defined(CONFIG_CMD_WGET)
 /*
  * make port a little random (1024-17407)
  * This keeps the math somewhat trivial to compute, and seems to work with

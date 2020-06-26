@@ -1490,6 +1490,13 @@ config CMD_MDIO
 	  The MDIO interface is orthogonal to the MII interface and extends
 	  it by adding access to more registers through indirect addressing.
 
+config CMD_WGET
+	bool "wget"
+	select TCP
+	help
+	  Download kernel, or other files, from a web server over TCP.
+	  Fast file transfer over networks with latenc
+
 config CMD_PING
 	bool "ping"
 	help
