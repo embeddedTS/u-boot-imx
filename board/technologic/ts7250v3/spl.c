@@ -100,17 +100,13 @@ void board_setup_eim(void)
 	u32 reg;
 	int i;
 
-	reg = __raw_readl(&imx_ccm->CCGR6);
-	reg |= MXC_CCM_CCGR6_EMI_SLOW_MASK;
-	__raw_writel(reg, &imx_ccm->CCGR6);
-
-	/* Set up FPGA for communication */
-	/* 396mhz PLL2_PDF2 div by 8 = 49.5MHz EIM clk */
+	/* select PLL2 PFD2 for EIM, and set divider to divide-by-4, to yield
+	 * a 99MHz clock */
 	clrsetbits_le32(&imx_ccm->cscmr1,
-			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_MASK |
-			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_MASK,
-			7 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_OFFSET |
-			2 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_OFFSET);
+			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_MASK |
+			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_MASK,
+			2 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_OFFSET |
+			3 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_OFFSET);
 
 	/* Set up EIM bus for FPGA */
 	imx_iomux_v3_setup_multiple_pads(
