@@ -19,7 +19,7 @@
 
 #include "tsfpga.h"
 
-#define EIM_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
+#define EIM_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST | PAD_CTL_SPEED_MED)
 
 #define MISC_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
 
