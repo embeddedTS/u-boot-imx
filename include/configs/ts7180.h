@@ -145,7 +145,7 @@
 		"setenv bootargs root=/dev/nfs ip=dhcp nfsroot=${nfsip}:${nfsroot} " \
 			"rootwait rw ${cmdline_append};" \
 		"bootz ${loadaddr} - ${fdtaddr};\0" \
-	"bootcmd_mfg=echo Booted over USB, running test/prime;" \
+	"bootcmd_mfg=exit;echo Booted over USB, running test/prime;" \
 		"if post;" \
 			"then ums mmc 1.1;" \
 			"mmc bootbus 1 1 0 2;" \

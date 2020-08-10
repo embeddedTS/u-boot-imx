@@ -29,8 +29,32 @@
 #include <usb.h>
 #include <usb/ehci-fsl.h>
 #include "fpga.h"
+#include "parse_strap.h"
+
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define FPGA_RESETN		IMX_GPIO_NR(4, 11)
+#define U_BOOT_JMPN		IMX_GPIO_NR(3, 16)
+#define PUSH_SW_CPUN		IMX_GPIO_NR(3, 18)
+#define NO_CHRG_JMPN		IMX_GPIO_NR(3, 11)
+#define OPT_ID_1                IMX_GPIO_NR(3, 27)
+#define OPT_ID_4                IMX_GPIO_NR(3, 23)   // Randy added this one
+#define OPT_ID_5                IMX_GPIO_NR(4, 19)   // Randy added this one
+#define JTAG_FPGA_TDO		IMX_GPIO_NR(3, 24)
+#define JTAG_FPGA_TDI		IMX_GPIO_NR(3, 3)
+#define JTAG_FPGA_TMS		IMX_GPIO_NR(3, 2)
+#define JTAG_FPGA_TCK		IMX_GPIO_NR(3, 1)
+#define EN_ETH_PHY_PWR 		IMX_GPIO_NR(1, 10)
+#define PHY1_DUPLEX 		IMX_GPIO_NR(2, 0)
+#define PHY2_DUPLEX 		IMX_GPIO_NR(2, 8)
+#define PHY1_PHYADDR2 		IMX_GPIO_NR(2, 1)
+#define PHY2_PHYADDR2		IMX_GPIO_NR(2, 9)
+#define PHY1_CONFIG_2 		IMX_GPIO_NR(2, 2)
+#define PHY2_CONFIG_2		IMX_GPIO_NR(2, 10)
+#define PHY1_ISOLATE		IMX_GPIO_NR(2, 7)
+#define PHY2_ISOLATE		IMX_GPIO_NR(2, 15)
+
 
 #define UART_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |		\
@@ -73,26 +97,10 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_PUS_47K_UP | PAD_CTL_SPEED_MED | PAD_CTL_HYS)
 
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
-
-#define FPGA_RESETN			IMX_GPIO_NR(4, 11)
-#define U_BOOT_JMPN			IMX_GPIO_NR(3, 16)
-#define PUSH_SW_CPUN		IMX_GPIO_NR(3, 18)
-#define NO_CHRG_JMPN		IMX_GPIO_NR(3, 11)
-#define OPT_ID_1        IMX_GPIO_NR(3, 27)
-#define OPT_ID_4        IMX_GPIO_NR(3, 23)
-#define JTAG_FPGA_TDO		IMX_GPIO_NR(3, 24)
-#define JTAG_FPGA_TDI		IMX_GPIO_NR(3, 3)
-#define JTAG_FPGA_TMS		IMX_GPIO_NR(3, 2)
-#define JTAG_FPGA_TCK		IMX_GPIO_NR(3, 1)
-#define EN_ETH_PHY_PWR 		IMX_GPIO_NR(1, 10)
-#define PHY1_DUPLEX 		IMX_GPIO_NR(2, 0)
-#define PHY2_DUPLEX 		IMX_GPIO_NR(2, 8)
-#define PHY1_PHYADDR2 		IMX_GPIO_NR(2, 1)
-#define PHY2_PHYADDR2		IMX_GPIO_NR(2, 9)
-#define PHY1_CONFIG_2 		IMX_GPIO_NR(2, 2)
-#define PHY2_CONFIG_2		IMX_GPIO_NR(2, 10)
-#define PHY1_ISOLATE		IMX_GPIO_NR(2, 7)
-#define PHY2_ISOLATE		IMX_GPIO_NR(2, 15)
+/*TODO: Verify that this implemtation of SPI_PAD is needed
+#define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED |		\
+	PAD_CTL_DSE_40ohm     | PAD_CTL_SRE_FAST | PAD_CTL_PUE |\
+*/
 
 /* I2C1 for Silabs */
 struct i2c_pads_info i2c_pad_info1 = {
@@ -254,6 +262,7 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_LCD_DATA06__GPIO3_IO11 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* NO_CHRG_JMP# */
 
 	/* note: options 2 and 3 are connected to the fpga */
+        MX6_PAD_CSI_VSYNC__GPIO4_IO19 | MUX_PAD_CTRL(MISC_PAD_CTRL),  /* Option ID5 */
 	MX6_PAD_LCD_DATA18__GPIO3_IO23 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* Option ID4 */
 	MX6_PAD_LCD_DATA22__GPIO3_IO27 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* Option ID1 */
 };
@@ -479,6 +488,9 @@ int board_early_init_f(void)
 	mdelay(1);
 	gpio_direction_output(FPGA_RESETN, 1);
 
+	/* Set up I2C bus for uC */
+	setup_i2c(
+
 	return 0;
 }
 
@@ -486,13 +498,14 @@ int board_init(void)
 {
 	/* Address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
-	#ifdef CONFIG_FEC_MXC
+#ifdef CONFIG_FEC_MXC
 	setup_fec(CONFIG_FEC_ENET_DEV);
-	#endif
+#endif
 
-	#ifdef CONFIG_FPGA
+#ifdef CONFIG_FPGA
+	/* Set up FPGA subsystem for JTAGing, i.e., soft loading */
 	ts7180_fpga_init();
-	#endif
+#endif
 
 	return 0;
 }
@@ -530,11 +543,13 @@ int board_late_init(void)
 
 	opts |= (gpio_get_value(OPT_ID_1) << 0);
 	opts |= (gpio_get_value(OPT_ID_4) << 3);
-
-	if (fpga_gpio_input(47))   /* pad N7, R36 on TS-1800 schematic) */
+	opts |= (gpio_get_value(OPT_ID_5) << 4); //Added line to support gpio read for ID5
+        
+	/* note: options 2 and 3 are connected to the FPGA */
+	if (fpga_gpio_input(47))   /* FPGA pad N7, R36 on TS-7180 schematic) */
 		opts |= (1 << 1);
 
-	if (fpga_gpio_input(48))   /* pad P7, R37 on TS-1800 schematic) */
+	if (fpga_gpio_input(48))   /* FPGA pad P7, R37 on TS-7180 schematic) */
 		opts |= (1 << 2);
 
 	setenv_hex("opts", (opts & 0xF));
@@ -568,6 +583,7 @@ int checkboard(void)
 #ifdef CONFIG_USB_EHCI_MX6
 #define USB_OTHERREGS_OFFSET	0x800
 #define UCTRL_PWR_POL		(1 << 9)
+
 iomux_v3_cfg_t const usb_otg1_pads[] = {
 	MX6_PAD_GPIO1_IO04__USB_OTG1_PWR | MUX_PAD_CTRL(NO_PAD_CTRL),
 	MX6_PAD_GPIO1_IO00__ANATOP_OTG1_ID | MUX_PAD_CTRL(OTG_ID_PAD_CTRL),
