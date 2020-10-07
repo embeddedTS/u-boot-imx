@@ -136,8 +136,8 @@ void hw_watchdog_reset(void)
 void reset_cpu(ulong addr)
 {
 #ifndef CONFIG_SPL_BUILD
-	char * const rebootcmd[] = {"silabs", "reboot"};
-	silab_cmd(2, rebootcmd);
+	char * const rebootcmd[] = {"silabs", "wdog", "set", "1"};
+	silab_cmd(4, rebootcmd);
 #endif
 }
 
