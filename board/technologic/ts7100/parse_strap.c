@@ -4,6 +4,10 @@
  * SPDX-License-Identifier:     GPL-2.0+
  */
 
+/*
+ * Knowledge of TS-7100 strapping is encapsulated in this file.
+ */
+
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/mx6-pins.h>
@@ -22,6 +26,8 @@
 #define	UART3_CTS_B	IMX_GPIO_NR(1, 26)	/* Bit 7 / IO model bit 3 */
 
 /*
+ * For Rev A:
+ *
  * Five straps on the CPU board go into the FPGA:
  *   RAM size:
  *     IO_B0 (C6)
@@ -74,7 +80,32 @@ const char *get_board_name(void)
 
 const char *get_cpu_board_version(void)
 {
-	return "P2";
+	uint8_t io_model = 0;
+	uint8_t cpu_board_rev = 0;
+	uint16_t raw_fpga_straps = 0;
+	static char model_str[24] = {0};
+
+	io_model = read_io_board_model();
+        raw_fpga_straps =  read_raw_fpga_straps();
+
+        cpu_board_rev |= ((raw_fpga_straps >> 12) & 0x01); // Rev A 0x01 strap on the FPGA
+
+        if (cpu_board_rev & 0x1) {
+		snprintf(model_str, sizeof(model_str), "A");
+		return model_str;
+        }
+
+        if (io_model == 0) {
+		snprintf(model_str, sizeof(model_str),
+			 "P2-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+        } else if (io_model == 1) {
+		snprintf(model_str, sizeof(model_str),
+			 "Am-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+        } else {
+		snprintf(model_str, sizeof(model_str),
+			 "UNKNOWN-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+        }
+        return model_str;
 }
 
 uint8_t read_cpu_board_opts(void)
@@ -82,7 +113,7 @@ uint8_t read_cpu_board_opts(void)
 	uint16_t fpga_straps;
 	uint8_t cpu_opts;
 
-	/* 
+	/*
 	 * bits 3:0 are FPGA GPIO bank 3, 5:2 and are purely straps
 	 * bits 5:4 are FPGA GPIO bank 3, 12:11 and are DIO_18:DIO_17
 	 * bank 3 12:11 are latched values of DIO_18:DIO_17 after unreset
@@ -107,9 +138,9 @@ uint8_t read_io_board_opts(void)
 	return io_opts;
 }
 
-uint8_t parse_strap(const char *env_name)
+uint16_t read_raw_cpu_straps(void)
 {
-	static uint8_t opts;
+	static uint16_t cpu_straps = 0;
 	static uint8_t read;
 
 	if (!read) {
@@ -135,22 +166,21 @@ uint8_t parse_strap(const char *env_name)
 
 		mdelay(1);
 
-		opts |= (gpio_get_value(NAND_CE0_B) << 0);
-		opts |= (gpio_get_value(UART2_TX_DATA) << 1);
-		opts |= (gpio_get_value(UART5_TX_DATA) << 2);
-		opts |= (gpio_get_value(UART4_TX_DATA) << 3);
-		opts |= (gpio_get_value(UART3_TX_DATA) << 4);
-		opts |= (gpio_get_value(NAND_CE1_B) << 5);
-		opts |= (gpio_get_value(LCD_DATA08) << 6);
-		opts |= (gpio_get_value(UART3_CTS_B) << 7);
+		cpu_straps |= (gpio_get_value(NAND_CE0_B) << 0);
+		cpu_straps |= (gpio_get_value(UART2_TX_DATA) << 1);
+		cpu_straps |= (gpio_get_value(UART5_TX_DATA) << 2);
+		cpu_straps |= (gpio_get_value(UART4_TX_DATA) << 3);
+		cpu_straps |= (gpio_get_value(UART3_TX_DATA) << 4);
+		cpu_straps |= (gpio_get_value(LCD_DATA08) << 5);
+		cpu_straps |= (gpio_get_value(NAND_CE1_B) << 6);
+		cpu_straps |= (gpio_get_value(UART3_CTS_B) << 7);
 
 		/* All straps are 1 = resistor populated. This is inverted from
 		 * the logic level read from the IO pins.
 		 */
-		opts ^= 0xFF;
+		cpu_straps ^= 0xFF;
 
 		read = 1;
 	}
-	if (env_name) env_set_hex(env_name, opts);
-	return opts;
+	return cpu_straps;
 }
