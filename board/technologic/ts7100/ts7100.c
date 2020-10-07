@@ -26,10 +26,7 @@
 #include <netdev.h>
 #include <usb.h>
 #include "fram.h"
-#define PORTED_PARSE_STRAP
-#if defined(PORTED_PARSE_STRAP)
-#  include "parse_strap.h"
-#endif
+#include "parse_strap.h"
 #include "tsfpga.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -441,6 +438,7 @@ int board_init(void)
 int board_late_init(void)
 {
 	uint32_t opts;
+	uint32_t io_model;
 
 	hw_watchdog_reset();
 
@@ -448,7 +446,12 @@ int board_late_init(void)
 
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 
+        /*
+         * WARNING: All of these are wiped out after an "env default -a",
+         * until the board is reset.
+         */
 	env_set("model", "7100");
+
 	/* Need to read latched FPGA value
 	 * bits 3:0 are FPGA GPIO bank 3, 5:2 and are purely straps
 	 * bits 5:4 are FPGA GPIO bank 3, 12:11 and are DIO_18:DIO_17
@@ -459,12 +462,24 @@ int board_late_init(void)
 	opts ^= 0x3F;
 	env_set_hex("opts", opts);
 
-#if defined(PORTED_PARSE_STRAP)
-	/* Read and parse CPU pins used for IO board strapping */
-	//opts = (uint32_t)(parse_strap(NULL) & 0xFF);
-	opts = (uint32_t)(parse_strap("io_opts_raw") & 0xFF);
-	env_set_hex("io_model", (ulong)((opts & 0xf0) >> 4));
+	/* Read and parse 6UL pins used for IO board strapping */
+	opts = (uint32_t)(read_io_board_opts() & 0xFF);
 	env_set_hex("io_opts", opts);
+
+        io_model = (opts & 0xf0) >> 4;
+	env_set_hex("io_model", io_model);
+
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+        if (io_model == 0) {
+          env_set("board_name", "TS-7100");
+          env_set("board_rev", "P2");
+        } else if (io_model == 1) {
+          env_set("board_name", "TS-7100-Z");
+          env_set("board_rev", "A");
+        } else {
+          env_set("board_name", "TS-7100");
+          env_set("board_rev", "A");
+        }
 #endif
 
 	if(is_mfg()) {
