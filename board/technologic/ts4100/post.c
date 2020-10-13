@@ -83,6 +83,11 @@ int emmc_test(int destructive)
 
 	/* This tests simple enumeration */
 	ret |= cmd->cmd(cmd, 0, 3, query_argv);
+	if (ret) {
+		printf("eMMC failed to enumerate\n");
+		printf("eMMC test failed\n");
+		return ret;
+	}
 
 	if(destructive) {
 		memset(loadaddr, 0xAAAAAAAA, 1024*1024*4);
@@ -111,11 +116,12 @@ int emmc_test(int destructive)
 			}
 		}
 
-		if (ret == 0) printf("eMMC test passed\n");
-		else printf("eMMC test failed\n");
 	} else {
-		printf("Not running eMMC test!\n");
+		printf("Not running destructive eMMC test!\n");
 	}
+
+	if (ret == 0) printf("eMMC test passed\n");
+	else printf("eMMC test failed\n");
 
 	return ret;
 }
