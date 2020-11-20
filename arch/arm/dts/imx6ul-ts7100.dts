@@ -48,8 +48,8 @@
 	compatible = "technologic,ts7100", "fsl,imx6ul";
 
 	aliases {
-		ethernet0 = &fec1;
-		ethernet2 = &fec2;
+		ethernet0 = &fec2;	/* ethernet@20b4000 eth0 */
+		ethernet1 = &fec1;	/* ethernet@2188000 eth1 */
 	};
 
 	chosen {
@@ -221,6 +221,9 @@
 	};
 };
 
+/* ethernet@2188000 is ENET1/FEC0 (uses PHY 2 in U-Boot)/&fec1/eth1 (uses PHC 1 in linux) */
+/* connector labeled eth0 here: https://docs.embeddedTS.com/TS-7100#Ethernet_Ports */
+/* eth1 (jack closest to USB connector) "mii info" calls it PHY 0x02 */
 &fec1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_enet1>;
@@ -233,22 +236,27 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		ethphy0: ethernet-phy@0 {
-			clocks = <&clks IMX6UL_CLK_ENET_REF>;
-			clock-names = "rmii-ref";
-			compatible = "ethernet-phy-ieee802.3-c22";
-			reg = <2>;
-		};
-
+		/* PHY for ethernet@20b4000 fec2/FEC1, below */
 		ethphy1: ethernet-phy@1 {
 			clocks = <&clks IMX6UL_CLK_ENET_REF>;
 			clock-names = "rmii-ref";
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
 		};
+
+		/* PHY for ethernet@2188000 fec1/FEC0, here */
+		ethphy0: ethernet-phy@0 {
+			clocks = <&clks IMX6UL_CLK_ENET_REF>;
+			clock-names = "rmii-ref";
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <2>;
+		};
 	};
 };
 
+/* ethernet@20b4000 is ENET2/FEC1 (uses PHY 1 in U-Boot)/&fec2/eth0 (uses PHC 0 in Linux) */
+/* connector labeled eth1 here: https://docs.embeddedTS.com/TS-7100#Ethernet_Ports */
+/* eth0 (jack further from USB connector) "mii info" calls it PHY 0x01 */
 &fec2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_enet2>;
