@@ -82,6 +82,7 @@
 	"run silochargeon;"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	ENV_IMX_TYPE \
 	"chrg_pct=60\0" \
 	"chrg_verb=0\0" \
 	"fdt_high=0xffffffff\0" \
@@ -91,7 +92,7 @@
 	"autoload=no\0" \
 	"nfsip=192.168.0.36\0" \
 	"nfsroot=/mnt/storage/imx6ul/\0" \
-	"clearenv=mmc dev 1 1; mmc erase 2000 400; mmc erase 3000 400;\0" \
+	"clearenv=env default -f -a; env save;\0" \
 	"cmdline_append=console=ttymxc0,115200 init=/sbin/init\0" \
 	"silochargeon=tsmicroctl d;" \
 		"if test $silopresent = '1';" \
@@ -174,6 +175,19 @@
 				"i2c mw 38 0.0 3;" \
 				"sleep 1;" \
 			"done;" \
+		"fi;\0" \
+	"update-uboot=env set filesize 0;" \
+		"if test ${jpsdboot} = 'on';" \
+			"then echo Updating U-Boot image from SD;" \
+			"load mmc 0:1 ${loadaddr} /boot/u-boot-${imx_type}.imx;"\
+		"else echo Updating U-Boot image from eMMC;" \
+			"load mmc 1:1 ${loadaddr} /boot/u-boot-${imx_type}.imx;"\
+		"fi;" \
+		"if test ${filesize} != 0;" \
+			"then setexpr filesize ${filesize} / 200;" \
+			"setexpr filesize ${filesize} + 1;" \
+			"mmc dev 1 1;" \
+			"mmc write ${loadaddr} 2 ${filesize};" \
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
@@ -265,5 +279,7 @@
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_MICREL
 #endif
+
+#define ENV_IMX_TYPE "imx_type="CONFIG_IMX_TYPE"\0"
 
 #endif /* __TS7180_CONFIG_H */
