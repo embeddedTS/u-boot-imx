@@ -272,6 +272,7 @@ int board_late_init(void)
 
 	if(is_mfg()) {
 		env_set("bootcmd", "mfg");
+		env_set("bootdelay", "1");
 	}
 
 	return 0;
