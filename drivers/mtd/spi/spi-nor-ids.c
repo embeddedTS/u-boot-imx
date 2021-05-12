@@ -120,6 +120,7 @@ const struct flash_info spi_nor_ids[] = {
 #endif
 #ifdef CONFIG_SPI_FLASH_ISSI		/* ISSI */
 	/* ISSI */
+	{ INFO("is25lq016b", 0x9d4015, 0, 64 * 1024,   32, 0) },
 	{ INFO("is25lq040b", 0x9d4013, 0, 64 * 1024,   8,
 			SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ) },
 	{ INFO("is25lp016",     0x9d6015, 0, 64 * 1024,  32, 0) },
