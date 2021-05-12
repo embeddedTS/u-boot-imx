@@ -97,7 +97,6 @@ void board_setup_eim(void)
 	struct weim *weim_regs = (struct weim *)WEIM_BASE_ADDR;
 	struct mxc_ccm_reg *const imx_ccm =
 		(struct mxc_ccm_reg *)CCM_BASE_ADDR;
-	u32 reg;
 	int i;
 
 	/* select PLL2 PFD2 for EIM, and set divider to divide-by-4, to yield
