@@ -926,7 +926,7 @@
 			weim: weim@21b8000 {
 				#address-cells = <2>;
 				#size-cells = <1>;
-				compatible = "fsl,imx6ul-weim", "fsl,imx6q-weim";
+				compatible = "fsl,imx6ul-weim", "fsl,imx6q-weim", "simple-bus";
 				reg = <0x021b8000 0x4000>;
 				interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&clks IMX6UL_CLK_EIM>;
