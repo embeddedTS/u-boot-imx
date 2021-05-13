@@ -260,10 +260,11 @@ int board_init(void)
 
 int board_late_init(void)
 {
-	uint32_t opts;
+	uint32_t fpga_rev = readl(FPGA_REV);
+	uint32_t opts = readl(FPGA_STRAPS) & 0xF;
 
-	opts = (readl(FPGA_SYSCON + 0x10) >> 17) & 0x1F;
 	env_set_hex("opts", opts);
+	env_set_hex("fpga_rev", fpga_rev & 0x7fffffff);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	env_set("board_name", "TS-7250-V3");
@@ -280,6 +281,16 @@ int board_late_init(void)
 
 int checkboard(void)
 {
-	printf("Board: TS-7250-V3\n");
+	uint32_t fpga_rev = readl(FPGA_REV);
+	uint32_t fpga_hash = readl(FPGA_HASH);
+
+	printf("Board: TS-7250-V3 REV A\n");
+	printf("FPGA:  Rev %d ", fpga_rev & 0x7fffffff);
+
+	if(fpga_rev & (1 << 31))
+		printf("(%x-dirty)\n", fpga_hash);
+	else
+		printf("(%x)\n", fpga_hash);
+
 	return 0;
 }
