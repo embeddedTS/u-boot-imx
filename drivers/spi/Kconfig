@@ -449,4 +449,9 @@ config OMAP3_SPI
 	  (McSPI). This driver be used to access SPI chips on platforms
 	  embedding this OMAP3 McSPI IP core.
 
+config OPENCORE_SPI
+	bool "Opencore SPI core"
+	help
+	  SPI master controller support from opencores.org.
+
 endif # menu "SPI Support"
