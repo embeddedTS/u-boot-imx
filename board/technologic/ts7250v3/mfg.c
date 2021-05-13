@@ -135,6 +135,9 @@ int cpu_write_fuses(void)
 
 int program_fpga(void)
 {
+	char *sf_pr_argv[3] = { "sf", "probe", "5:2" };
+	char *sf_rd_argv[5] = { "sf", "read", "0x82000000", "0", "0x100000" };
+	char *sf_wr_argv[5] = { "sf", "update", "0x82000000", "0", "0x100000" };
 	int ret = 0;
 
 	/* Read offboard flash & write it onboard. */
@@ -146,19 +149,15 @@ int program_fpga(void)
 		return 1;
 	}
 
-	ret = asmi_read((uint8_t *)CONFIG_LOADADDR, 0, 0x100000, 1);
-	if(ret) {
-		printf("Failed to read offboard SPI flash\n");
-		mfg_result(0);
-		return 1;
-	}
+	/* Probe offboard SPI */
+	ret |= cmd_process(0, 3, sf_pr_argv, 0, 0);
+	/* Read offboard SPI */
+	ret |= cmd_process(0, 5, sf_rd_argv, 0, 0);
 	gpio_set_value(FPGA_FLASH_SELECT, 1);
-	ret |= do_asmi_write(CONFIG_LOADADDR, 0, 0x100000, 1);
-	if(ret) {
-		printf("Failed to write onboard SPI flash\n");
-		mfg_result(0);
-		return 1;
-	}
+	/* Probe onboard SPI */
+	ret |= cmd_process(0, 3, sf_pr_argv, 0, 0);
+	/* Write onboard SPI */
+	ret |= cmd_process(0, 5, sf_wr_argv, 0, 0);
 
 	return ret;
 }
@@ -181,26 +180,31 @@ static int do_mfg(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	printf("Starting MFG, do not interrupt.\n");
 
+	printf("Programming FPGA\n");
 	ret = program_fpga();
 	if(ret){
 		mfg_result(0);
 		return ret;
 	}
 
+	printf("Setting up eMMC\n");
 	ret = setup_emmc();
 	if(ret){
 		mfg_result(0);
 		return ret;
 	}
 
+	printf("Writing Fuses\n");
 	ret = cpu_write_fuses();
 	if(ret){
 		mfg_result(0);
 		return ret;
 	}
 
+	printf("Starting UMS\n");
 	start_ums();
 
+	printf("MFG Succeeded\n");
 	mfg_result(1);
 
 	return 0;

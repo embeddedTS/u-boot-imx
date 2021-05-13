@@ -12,9 +12,9 @@
 #define FPGA_BLOCKRAM		(FPGA_BASE + 0x0)
 #define FPGA_SYSCON		(FPGA_BASE + 0x4000)
 
-#define FPGA_MODEL		(FPGA_SYSCON + 0x0)
-#define FPGA_REV_CRC32		(FPGA_SYSCON + 0x4) /* 32-bit crc32 of 905KB of 0xf0000 offset*/
-#define FPGA_ASMI		(FPGA_SYSCON + 0x8) /* Core to access FPGA flash */
+#define FPGA_REV		(FPGA_SYSCON + 0x0)
+#define FPGA_HASH		(FPGA_SYSCON + 0x4)
+#define FPGA_STRAPS		(FPGA_SYSCON + 0x8)
 #define FPGA_SCRATCH_REG        (FPGA_SYSCON + 0xc) /* scratch register used for bus testing */
 #define FPGA_DIO1_DAT_SET	(FPGA_SYSCON + 0x10)
 #define FPGA_DIO1_OE_SET	(FPGA_SYSCON + 0x12)
@@ -88,8 +88,5 @@
 #define fpga_dio1_data_get(pin) !!(readw(FPGA_DIO1_DAT_SET) & pin)
 #define fpga_dio2_data_get(pin) !!(readw(FPGA_DIO2_DAT_SET) & pin)
 #define fpga_dio3_data_get(pin) !!(readw(FPGA_DIO3_DAT_SET) & pin)
-
-int asmi_read(uint8_t *buf, uint32_t addr, uint32_t size, int en_reverse);
-int do_asmi_write(unsigned int data, unsigned int offset, unsigned int len, int en_reverse);
 
 #endif // __FPGA_H__
