@@ -28,13 +28,19 @@ void leds_test(void)
 	for(i = 0; i < 24; i++){
 		if(i % 4 == 0) red_led_on();
 		else red_led_off();
-		if(i % 4 == 1) green_led_on();
+		if(i % 4 == 1) yellow_led_on();
+		else yellow_led_off();
+		if(i % 4 == 2) green_led_on();
 		else green_led_off();
+		if(i % 4 == 3) blue_led_on();
+		else blue_led_off();
 		mdelay(100);
 	}
 
 	red_led_on();
 	green_led_on();
+	blue_led_off();
+	yellow_led_off();
 }
 
 /* Placeholder for now */
