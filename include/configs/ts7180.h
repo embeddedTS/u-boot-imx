@@ -83,7 +83,7 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	ENV_IMX_TYPE \
-	"chrg_pct=60\0" \
+	"chrg_pct=90\0" \
 	"chrg_verb=0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -94,16 +94,16 @@
 	"nfsroot=/mnt/storage/imx6ul/\0" \
 	"clearenv=env default -f -a; env save;\0" \
 	"cmdline_append=console=ttymxc0,115200 init=/sbin/init\0" \
-	"silochargeon=tsmicroctl d;" \
+	"silochargeon=silabs scaps disable;" \
 		"if test $silopresent = '1';" \
 			"then if test $jpnochrg = 'off';" \
-				"then tsmicroctl e;"\
+				"then silabs scaps enable;"\
 			"fi;"\
 		"fi;\0" \
 	"silowaitcharge=if test $silopresent = '1';" \
 		"then if test $jpnochrg = 'on';" \
 			"then echo 'NO CHRG jumper is set, not waiting';" \
-			"else tsmicroctl w ${chrg_pct} ${chrg_verb};" \
+			"else silabs scaps wait pct ${chrg_pct};" \
 		"fi;" \
 	"fi;\0" \
 	"usbprod=usb start;" \
