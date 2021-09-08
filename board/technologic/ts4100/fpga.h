@@ -16,7 +16,7 @@
 #define DIO_20			57
 #define DIO_05			42
 #define DIO_43			80
-#define DIO_01			01
+#define SPARE1			01
 #define DIO_09			46
 #define SILAB_CLK		84
 #define SILAB_RST		85

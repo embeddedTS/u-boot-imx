@@ -188,13 +188,13 @@ void config_opts(int bbid)
 	 * Set the bootdelay env var to force_bootdelay, fallback to "1"
 	 *
 	 * PSwitch is intended for use only on production/development baseboards.
-	 * Because of this, we assume no PSwitch is present unless we find a
-	 * whitelisted baseboard.
+	 * Because of this, we assume no PSwitch is present unless its in the
+	 * exception list below.
 	 */
 	pswitch = FORCE_UNSET;
 	sdboot = fpga_gpio_input(DIO_20);
 	uboot = fpga_gpio_input(DIO_43);
-	nochrg = fpga_gpio_input(DIO_01);
+	nochrg = fpga_gpio_input(SPARE1);
 	bbsilo = PRESENT;
 
 	switch (bbid & ~0xC0) {
@@ -207,8 +207,8 @@ void config_opts(int bbid)
 		nochrg = FORCE_UNSET;
 		bbsilo = NOT_PRESENT;
 		break;
-	  case 0x2f: /* Reserved */
-	  case 0x2e: /* Reserved */
+	  case 0x2F: /* Reserved */
+	  case 0x2E: /* Reserved */
 		setenv("baseboard", "Custom");
 		nochrg = FORCE_UNSET;
 		bbsilo = NOT_PRESENT;
@@ -232,11 +232,17 @@ void config_opts(int bbid)
 	  case 0x08: /* TS-8820 */
 		setenv("baseboard", "TS-8820");
 		pswitch = fpga_gpio_input(DIO_09);
-		uboot = FORCE_UNSET;
-		setenv_ulong("bootdelay",
-		  getenv_ulong("force_bootdelay", 10, 1));
-		nochrg = FORCE_UNSET;
-		bbsilo = NOT_PRESENT;
+		/* Starting from BB_REV 1, Rev D PCB, the TS-8820 has TS-SILO, and U-Boot
+		 * jumper present.
+		 * BB_REV 0, PCB Rev C and earlier, only have pswitch and SD boot jumpers
+		 */
+		if (((bbid & 0xC0) >> 6) == 0) {
+			uboot = FORCE_UNSET;
+			setenv_ulong("bootdelay",
+			  getenv_ulong("force_bootdelay", 10, 1));
+			nochrg = FORCE_UNSET;
+			bbsilo = NOT_PRESENT;
+		}
 		break;
 	  default: /* All other boards presumed to have std. jumper locations w/
 		    * TS-SILO
