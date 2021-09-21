@@ -105,7 +105,7 @@ void board_setup_eim(void)
 			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_MASK |
 			MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_MASK,
 			2 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_OFFSET |
-			3 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_OFFSET);
+			4 << MXC_CCM_CSCMR1_ACLK_EMI_SLOW_PODF_OFFSET);
 
 	/* Set up EIM bus for FPGA */
 	imx_iomux_v3_setup_multiple_pads(
