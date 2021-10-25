@@ -110,6 +110,7 @@ int wait_for_supercaps(int pct, int verbose)
 	if(pct > 100) pct = 100;
 
 	while(1) {
+		i2c_set_bus_num(0);
 		i2c_read(0x4a, 0x0, 0, &buf[0], 4);
 		check = (((buf[2]<<8|buf[3])*100/237));
 		if(check > 311) {
@@ -121,7 +122,19 @@ int wait_for_supercaps(int pct, int verbose)
 			if(verbose) printf("0%%\n");
 		}
 		if(ctrlc()) return 1;
-		udelay(1000000);
+
+		udelay(125000);
+		red_led_off();
+		udelay(125000);
+		red_led_on();
+		udelay(125000);
+		red_led_off();
+		udelay(125000);
+		green_led_on();
+		udelay(250000);
+		green_led_off();
+		udelay(250000);
+		red_led_on();
 	}
 }
 
