@@ -104,12 +104,6 @@ int setup_emmc(void)
 		return 1;
 	}
 
-	ret = mmc_set_boot_bus_width(mmc, 1, 0, 2);
-	if(ret) {
-		printf("emmc bootbus failed\n");
-		return 1;
-	}
-
 	ret = mmc_set_part_conf(mmc, 1, 1, 1);
 	if(ret) {
 		printf("emmc partconf failed\n");
