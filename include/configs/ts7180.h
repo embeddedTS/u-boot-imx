@@ -117,21 +117,6 @@
   	    "serverip=192.168.0.36\0" \
 	    "nfsroot=/nfsroot/imx6ul/\0"
 #  endif
-#  define FACTORY_PRODUCTION \
-	"production=blast\0"
-#  define FACTORY_DEVELOPMENT \
-        "bootfile=u-boot.bin\0" \
-        "serverpath=/~lionel/vimx/\0" \
-        "wgetaddr=87800000\0" \
-        "uboot-go=env run uboot-wget ; go 87800000\0" \
-        "uboot-go-safe=silabs wdog 30000 ; echo remember to disable the watchdog if good ; run uboot-go ;\0" \
-        "uboot-init=env set bootfile u-boot.bin ; env set serverpath /~lionel/u-boot-imx/ ;\0" \
-        "uboot-wget=run uboot-init ; wget ${wgetaddr} ${serverip}:${serverpath}${bootfile} ;\0" \
-        "uboot-wget-img=run uboot-init ; wget ${loadaddr} ${serverip}:${serverpath}${u-boot-bin} ;\0" \
-        "wdog-status=if tsmicroctl wdog ; then echo unarmed ; else echo armed ; fi ;\0" \
-        "wdog0=tsmicroctl wdog set 0\0" \
-        "wdog30=tsmicroctl wdog set 30000\0" \
-	"production=blast\0"
 #endif /* FACTORY */
 
 /* If a board already has an environment, where do we force this one? */
@@ -176,13 +161,12 @@
 	"chrg_pct=60\0" \
 	"chrg_verb=0\0" \
 	"fdt_high=0xffffffff\0" \
-	"initrd_addr=0x83800000\0" \
+	"initrd_addr=" __stringify(RAMDISK_ADDR_R) "\0" \
 	"initrd_high=0xffffffff\0" \
 	"autoload=no\0" \
 	"model=7180\0" \
         FACTORY_NFS \
-        FACTORY_PRODUCTION \
-        FACTORY_DEVELOPMENT \
+        FACTORY_MFG_ENV \
 	"clearenv=env default -f -a; env save;\0" \
 	"loadaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdtaddr=" __stringify(FDT_ADDR_R) "\0" \
@@ -191,7 +175,7 @@
 	"ramdisk_addr_r=" __stringify(RAMDISK_ADDR_R) "\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"fdtfile=imx6ul-ts7250v3.dtb\0" \
+	"fdtfile=imx6ul-ts7180.dtb\0" \
 	"clearbootcnt=mw.b 50004018 0;\0" \
 	"cmdline_append=console=ttymxc0,115200 init=/sbin/init\0" \
 	"altbootcmd=echo taking some recovery action\0" \
@@ -229,7 +213,7 @@
 			"source ${loadaddr};" \
 		"fi;" \
 		"load mmc 1:1 ${fdtaddr} " \
-		  "/boot/imx6ul-ts${model}-${io_model}.dtb;" \
+		  "/boot/imx6ul-ts${model}.dtb;" \
 		"if load mmc 1:1 ${loadaddr} /boot/zImage;" \
 			"then run silowaitcharge;" \
 			"setenv bootargs root=/dev/mmcblk1p1 rootwait rw ${cmdline_append};" \
@@ -240,8 +224,8 @@
 			"then run silowaitcharge;" \
 			"setenv bootargs root=/dev/nfs ip=dhcp " \
 			  "nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \
-			  "cpu_opts=0x${opts} io_opts=0x${io_opts} " \
-			  "io_model=0x${io_model} ${cmdline_append};" \
+			  "opts=0x${opts} " \
+			  "model=0x${model} ${cmdline_append};" \
 			"bootz ${loadaddr} - ${fdtaddr};" \
 		"else echo Failed to load kernel from NFS;" \
 		"fi\0"                                             \
@@ -255,9 +239,8 @@
 			"source ${loadaddr};" \
 		"fi;" \
 		"nfs ${fdtaddr} " \
-		  "${nfsip}:${nfsroot}/boot/imx6ul-ts${model}-${io_model}.dtb;"\
+		  "${nfsip}:${nfsroot}/boot/imx6ul-ts${model}.dtb;"\
                 "run nfsboot-kernel ;\0" \
-        FACTORY_MFG_ENV \
 	"update-spl=dhcp;"\
 		"if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/SPL; then " \
                         "setexpr filesize ${filesize} / 200 ; " \
