@@ -91,9 +91,6 @@ void ts7180_fpga_init(void);
 	PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
-#define MISC_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
-	PAD_CTL_PUS_47K_UP | PAD_CTL_SPEED_MED | PAD_CTL_HYS)
-
 #define PC MUX_PAD_CTRL(I2C_PAD_CTRL)
 /*TODO: Verify that this implemtation of SPI_PAD is needed
 #define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED |		\
@@ -242,18 +239,6 @@ static iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_UART1_TX_DATA__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 	MX6_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
-
-static iomux_v3_cfg_t const misc_pads[] = {
-	MX6_PAD_LCD_DATA11__GPIO3_IO16 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* U_BOOT_JMP# */
-	MX6_PAD_LCD_DATA13__GPIO3_IO18 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* PUSH_SW_CPU# */
-	MX6_PAD_LCD_DATA06__GPIO3_IO11 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* NO_CHRG_JMP# */
-
-	/* note: options 2 and 3 are connected to the fpga */
-        MX6_PAD_CSI_VSYNC__GPIO4_IO19 | MUX_PAD_CTRL(MISC_PAD_CTRL),  /* Option ID5 */
-	MX6_PAD_LCD_DATA18__GPIO3_IO23 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* Option ID4 */
-	MX6_PAD_LCD_DATA22__GPIO3_IO27 | MUX_PAD_CTRL(MISC_PAD_CTRL), /* Option ID1 */
-};
-
 
 static void setup_iomux_uart(void)
 {
@@ -498,9 +483,6 @@ int board_early_init_f(void)
 	imx_iomux_v3_setup_multiple_pads(fpga_jtag_pads,
 					 ARRAY_SIZE(fpga_jtag_pads));
 
-	imx_iomux_v3_setup_multiple_pads(
-		misc_pads, ARRAY_SIZE(misc_pads));
-
 	/* Keep as inputs to allow offboard programming */
 	gpio_direction_input(JTAG_FPGA_TDI);
 	gpio_direction_input(JTAG_FPGA_TCK);
@@ -581,9 +563,9 @@ int board_late_init(void)
 	}
 
         /* Some other TS U-Boots handle opts in a separate parse_strap module */
-	opts |= (gpio_get_value(OPT_ID_1) << 0);
-	opts |= (gpio_get_value(OPT_ID_4) << 3);
-	opts |= (gpio_get_value(OPT_ID_5) << 4); //Added line to support gpio read for ID5
+	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
+	opts |= (gpio_get_value(OPT_ID_4) << 3); // R38
+	opts |= (gpio_get_value(OPT_ID_1) << 0); // R31
         
 #if defined(HAVE_TSFPGA)
 	/* note: options 2 and 3 are connected to the FPGA */
@@ -593,13 +575,13 @@ int board_late_init(void)
 	if (fpga_gpio_input(48))   /* FPGA pad P7, R37 on TS-7180 schematic) */
 		opts |= (1 << 2);
 #endif
-	env_set_hex("opts", (opts & 0xF));
+	env_set_hex("opts", (opts & 0x1F));
 
         gpio_request(OPT_ID_4, "ID4");
         if (gpio_get_value(OPT_ID_4)) {
-          env_set("dram_mb", "512");
-        } else {
           env_set("dram_mb", "1024");
+        } else {
+          env_set("dram_mb", "512");
         }
 
 	if(is_mfg()) {

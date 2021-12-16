@@ -31,10 +31,8 @@
 #define OPT_ID_4                IMX_GPIO_NR(3, 23)
 #define EN_EMMC_3V_N            IMX_GPIO_NR(4, 22)
 
-#define MISC_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
-
-#define MISC_PAD_PU_CTRL (PAD_CTL_PUS_100K_UP | PAD_CTL_PKE | PAD_CTL_PUE | \
-	PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
+#define MISC_PAD_PU_CTRL (PAD_CTL_PUS_22K_UP | PAD_CTL_PKE | PAD_CTL_PUE | \
+	PAD_CTL_DSE_48ohm | PAD_CTL_SPEED_MED | PAD_CTL_HYS)
 
 #define UART_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |		\
@@ -45,11 +43,19 @@ static iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
-#if 1
 static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_CSI_DATA01__GPIO4_IO22 | MUX_PAD_CTRL(PAD_CTL_PUS_100K_DOWN|PAD_CTL_PKE|PAD_CTL_DSE_65ohm|PAD_CTL_SPEED_LOW), /* EN_EMMC_3.3V# */
+
+	MX6_PAD_LCD_DATA11__GPIO3_IO16 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL), /* U_BOOT_JMP# */
+	MX6_PAD_LCD_DATA13__GPIO3_IO18 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL), /* PUSH_SW_CPU# */
+	MX6_PAD_LCD_DATA06__GPIO3_IO11 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL), /* NO_CHRG_JMP# */
+
+	/* NOTE: Options IDs 2 and 3 are connected to the FPGA rather than the 6ul */
+        MX6_PAD_CSI_VSYNC__GPIO4_IO19 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),  /* R30 = Option ID5 */
+	MX6_PAD_LCD_DATA18__GPIO3_IO23 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL), /* R38 = Option ID4 */
+	MX6_PAD_LCD_DATA22__GPIO3_IO27 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL), /* R31 = Option ID1 */
 };
-#endif
+
 
 /* 
  * USB is handled in ts7180.c:
@@ -64,11 +70,10 @@ static iomux_v3_cfg_t const misc_pads[] = {
 static void early_init(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
-#if 1
+
         /* v2016 is happy with the POR value (i.e., for the EN_MMC_3V pad) */
         /* Or maybe its DCD just takes care of things? */
 	SETUP_IOMUX_PADS(misc_pads);
-#endif
 }
 
 static struct mx6ul_iomux_grp_regs mx6_grp_ioregs = {
@@ -185,10 +190,14 @@ static void ccgr_init(void)
 
 static void spl_dram_init(void)
 {
-	uint32_t reg = gpio_get_value(OPT_ID_4);
+	uint32_t reg;
+
+	gpio_direction_input(OPT_ID_4);
 
 	mx6ul_dram_iocfg(16, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	if (reg) {
+
+	reg = gpio_get_value(OPT_ID_4);
+	if (reg == 0) {
           /* 4Gb Alliance AS4C256M16D3LB */
           mx6_dram_cfg(&ts7250v3_sysinfo,
                        &ts7250v3_512m_calibration,
