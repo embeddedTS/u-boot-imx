@@ -221,27 +221,66 @@
 			"bootz ${kernel_addr_r} - ${fdtaddr};" \
 		"else echo Failed to load kernel from eMMC;" \
 		"fi;\0" \
-	"nfsboot-kernel=if nfs ${kernel_addr_r} ${nfsip}:${nfsroot}/boot/zImage;" \
-			"then run silowaitcharge;" \
-			"setenv bootargs root=/dev/nfs ip=dhcp " \
-			  "nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \
-			  "opts=0x${opts} " \
-			  "model=0x${model} ${cmdline_append};" \
-			"bootz ${kernel_addr_r} - ${fdtaddr};" \
-		"else echo Failed to load kernel from NFS;" \
-		"fi\0"                                             \
-	"nfsboot=echo Booting from NFS ...;" \
-		"dhcp;" \
-		"if nfs ${fdtaddr} ${nfsip}:${nfsroot}/boot/boot.scr.uimg;" \
-			"then echo Booting from custom /boot/boot.scr.uimg;" \
-			"source ${loadaddr};" \
-		"else if nfs ${fdtaddr} ${nfsip}:${nfsroot}/boot/boot.scr;" \
-			"then echo Booting from custom /boot/boot.scr;" \
-			"source ${loadaddr};" \
-		"fi;" \
-		"nfs ${fdtaddr} " \
-		  "${nfsip}:${nfsroot}/boot/imx6ul-ts${model}.dtb;"\
-                "run nfsboot-kernel ;\0" \
+	"nfsboot-set-prod-params=if test -n \"${sandbox}\" ; then "      \
+		        "env set nfsip 192.168.0.11 ; "                  \
+		        "env set nfsroot /u/sandbox/${sandbox} ; "       \
+			"env set prod_prefix ${nfsip}:${nfsroot} ;"      \
+		"else;"                                                  \
+		        "env set nfsip 192.168.1.102 ; "                 \
+		        "env set nfsroot /home/lionel/src/production ; " \
+			"env set prod_prefix ${nfsip}:${nfsroot} ;"      \
+		"fi; "                                                   \
+		"dhcp;"                                                  \
+		"\0"                                                     \
+	"prod_boot="                              \
+		"run nfsboot-set-prod-params ; "  \
+		"run run-nfsboot-script ;"        \
+		"\0"                              \
+	"nfsboot-kernel=if nfs ${kernel_addr_r} ${nfsip}:${nfsroot}/boot/zImage;"            \
+		"then run silowaitcharge;"                                                   \
+			"setenv bootargs root=/dev/nfs ip=dhcp "                             \
+				"nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \
+				"opts=0x${opts} "                                            \
+				"model=0x${model} ${cmdline_append} ;"                       \
+			"bootz ${kernel_addr_r} - ${fdtaddr};"                               \
+		"else "                                                                      \
+			"echo Failed to load kernel from NFS;"                               \
+		"fi;"                                                                        \
+		"\0"                                                                         \
+	"nfsboot-direct=echo Booting kernel direct via NFS ...;"                     \
+		"if nfs ${fdtaddr} ${nfsip}:${nfsroot}/boot/imx6ul-ts${model}.dtb ;" \
+		"then "                                                              \
+			"run nfsboot-kernel ; "                                      \
+		"fi;"                                                                \
+		"\0"                                                                 \
+	"nfsboot=echo Booting from NFS ...;"                                      \
+		"if test -n \"${production}\" || test -n \"${sandbox}\" ; then "  \
+			"run prod_boot ; "                                        \
+		"else"                                                            \
+			"env set autoload true ; "                                \
+			"dhcp && source ${loadaddr} ; "                           \
+		"fi;"                                                             \
+		"\0"                                                              \
+        "update-scriptaddr=setenv oscriptaddr ${scriptaddr} ; "               \
+		"setexpr old_plus_filesize ${oscriptaddr} + ${filesize}  ; "  \
+		"setexpr plus_padding ${old_plus_filesize} + 0xff  ; "        \
+		"setexpr new_scriptaddr ${plus_padding} \"&\" 0xffffff00  ; " \
+		"echo \"Next scriptaddr will be: ${new_scriptaddr}\" ; "      \
+		"env set scriptaddr ${new_scriptaddr} ; "                     \
+		"\0"                                                          \
+	"boot-scripts=boot.scr.uimg boot/boot.scr.uimg boot/boot.scr ;\0" \
+	"run-nfsboot-script="                                                  \
+		"for script in ${boot-scripts}; do "                           \
+			"if nfs ${scriptaddr} ${nfsip}:${nfsroot}/${script} ;" \
+			"then "                                                \
+				"echo Found U-Boot script "                    \
+					"${script}; "                          \
+				"run update-scriptaddr ; "                     \
+				"source ${oscriptaddr} ; "                     \
+				"echo SCRIPT FAILED: continuing...; "          \
+			"fi; "                                                 \
+		"done;"                                                        \
+		"\0"                                                           \
 	"update-spl=dhcp;"\
 		"if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/SPL; then " \
                         "setexpr filesize ${filesize} / 200 ; " \
