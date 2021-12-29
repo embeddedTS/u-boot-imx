@@ -153,6 +153,7 @@
 			"done;" \
 		"fi;\0"
 
+#define SCRIPT_ADDR_R			0x80100000
 #define FDT_ADDR_R			0x83000000
 #define RAMDISK_ADDR_R			0x90000000
 
@@ -173,7 +174,7 @@
 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdt_addr_r=" __stringify(FDT_ADDR_R) "\0" \
 	"ramdisk_addr_r=" __stringify(RAMDISK_ADDR_R) "\0" \
-	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
+	"scriptaddr=" __stringify(SCRIPT_ADDR_R) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdtfile=imx6ul-ts7180.dtb\0" \
 	"clearbootcnt=mw.b 50004018 0;\0" \
@@ -194,23 +195,23 @@
 	"usbprod=usb start;" \
 		"if usb storage;" \
 			"then echo Checking USB storage for updates;" \
-			"if load usb 0:1 ${loadaddr} /tsinit.scr;" \
+			"if load usb 0:1 ${scriptaddr} /tsinit.scr;" \
 				"then led green on;" \
-				"source ${loadaddr};" \
+				"source ${scriptaddr};" \
 				"led red off;" \
 				"exit;" \
 			"fi;" \
-			"if load usb 0:1 ${loadaddr} /tsinit.scr.uimg;" \
+			"if load usb 0:1 ${scriptaddr} /tsinit.scr.uimg;" \
 				"then led green on;" \
-				"source ${loadaddr};" \
+				"source ${scriptaddr};" \
 				"led red off;" \
 				"exit;" \
 			"fi;" \
 		"fi;\0" \
 	"emmcboot=echo Booting from the eMMC ...;" \
-		"if load mmc 1:1 ${loadaddr} /boot/boot.ub;" \
+		"if load mmc 1:1 ${scriptaddr} /boot/boot.ub;" \
 			"then echo Booting from custom /boot/boot.ub;" \
-			"source ${loadaddr};" \
+			"source ${scriptaddr};" \
 		"fi;" \
 		"load mmc 1:1 ${fdtaddr} " \
 		  "/boot/imx6ul-ts${model}.dtb;" \
