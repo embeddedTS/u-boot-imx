@@ -89,33 +89,21 @@
 /*#define CONFIG_PREBOOT \
 	"run silochargeon;"*/
 
-#define FACTORY_DEFAULT 0
-#define FACTORY_REMOTE 1
-#define FACTORY FACTORY_REMOTE
+#define FACTORY_DEFAULT        0
+#define FACTORY_SANDBOX        1
+#define FACTORY FACTORY_SANDBOX
 #if defined(FACTORY)
-#  if (FACTORY == FACTORY_REMOTE)
-#    if true
-#      define FACTORY_NFS \
-  	    "nfsip=192.168.71.2\0" \
-  	    "serverip=192.168.71.20\0" \
-	    "nfsroot=/mnt/sdb1/production/product/TS-7180\0" \
-	    "sandbox=remote\0"
-#    elif false
-#      define FACTORY_NFS \
-  	    "nfsip=192.168.71.2\0" \
-  	    "serverip=192.168.71.20\0" \
-	    "nfsroot=/mnt/sdb1/\0"
-#    else
-#      define FACTORY_NFS \
-  	    "nfsip=192.168.71.2\0" \
-  	    "serverip=192.168.71.20\0" \
-            "nfsroot=/mnt/sdb1/ts${model}#${serial}_rootfs\0"
-#    endif
-#  else
+#  if (FACTORY == FACTORY_DEFAULT)
 #      define FACTORY_NFS \
   	    "nfsip=192.168.0.36\0" \
   	    "serverip=192.168.0.36\0" \
 	    "nfsroot=/nfsroot/imx6ul/\0"
+#  elif (FACTORY == FACTORY_SANDBOX)
+#    define FACTORY_NFS \
+  	    "nfsip=192.168.0.11\0" \
+  	    "serverip=192.168.0.11\0" \
+	    "sandbox=lionel\0" \
+	    "nfsroot=/u/sandbox/${sandbox}\0"
 #  endif
 #endif /* FACTORY */
 
