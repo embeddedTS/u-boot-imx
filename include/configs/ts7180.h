@@ -91,6 +91,8 @@
 
 #define FACTORY_DEFAULT        0
 #define FACTORY_SANDBOX        1
+#define FACTORY_LEGACY_SANDBOX 2
+#define FACTORY_DEV            3
 #define FACTORY FACTORY_SANDBOX
 #if defined(FACTORY)
 #  if (FACTORY == FACTORY_DEFAULT)
@@ -104,6 +106,17 @@
   	    "serverip=192.168.0.11\0" \
 	    "sandbox=lionel\0" \
 	    "nfsroot=/u/sandbox/${sandbox}\0"
+#  elif (FACTORY == FACTORY_LEGACY_SANDBOX)
+#    define FACTORY_NFS \
+  	    "nfsip=192.168.0.11\0" \
+  	    "serverip=192.168.0.11\0" \
+	    "sandbox=.sand\0" \
+	    "nfsroot=/u/x/jessie-armel/boot-imx6ul${sandbox}\0"
+#  elif (FACTORY == FACTORY_DEV)
+#    define FACTORY_NFS \
+  	    "nfsip=192.168.1.102\0" \
+  	    "serverip=192.168.1.102\0" \
+	    "nfsroot=/home/lionel/src/production\0"
 #  endif
 #endif /* FACTORY */
 
