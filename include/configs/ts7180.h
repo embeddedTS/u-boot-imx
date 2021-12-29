@@ -215,19 +215,19 @@
 		"fi;" \
 		"load mmc 1:1 ${fdtaddr} " \
 		  "/boot/imx6ul-ts${model}.dtb;" \
-		"if load mmc 1:1 ${loadaddr} /boot/zImage;" \
+		"if load mmc 1:1 ${kernel_addr_r} /boot/zImage;" \
 			"then run silowaitcharge;" \
 			"setenv bootargs root=/dev/mmcblk1p1 rootwait rw ${cmdline_append};" \
-			"bootz ${loadaddr} - ${fdtaddr};" \
+			"bootz ${kernel_addr_r} - ${fdtaddr};" \
 		"else echo Failed to load kernel from eMMC;" \
 		"fi;\0" \
-	"nfsboot-kernel=if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/zImage;" \
+	"nfsboot-kernel=if nfs ${kernel_addr_r} ${nfsip}:${nfsroot}/boot/zImage;" \
 			"then run silowaitcharge;" \
 			"setenv bootargs root=/dev/nfs ip=dhcp " \
 			  "nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \
 			  "opts=0x${opts} " \
 			  "model=0x${model} ${cmdline_append};" \
-			"bootz ${loadaddr} - ${fdtaddr};" \
+			"bootz ${kernel_addr_r} - ${fdtaddr};" \
 		"else echo Failed to load kernel from NFS;" \
 		"fi\0"                                             \
 	"nfsboot=echo Booting from NFS ...;" \
