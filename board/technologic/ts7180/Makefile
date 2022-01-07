@@ -1,4 +1,4 @@
-# (C) Copyright 2015 Technologic Systems
+# (C) Copyright 2015-2022 Technologic Systems, Inc. dba embeddedTS
 #
 # SPDX-License-Identifier:	GPL-2.0+
 #

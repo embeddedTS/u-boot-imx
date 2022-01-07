@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Technologic Systems
+ * Copyright (C) 2017-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -475,7 +475,7 @@ u32 get_board_rev(void)
 
 int checkboard(void)
 {
-	puts("Board: Technologic Systems TS-7553-V2\n");
+	puts("Board: embeddedTS TS-7553-V2\n");
 	return 0;
 }
 

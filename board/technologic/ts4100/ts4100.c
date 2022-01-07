@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Technologic Systems
+ * Copyright (C) 2016-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -722,7 +722,7 @@ int checkboard(void)
 	gpio_direction_output(FPGA_RESETN, 1);
 
 	fpgarev = fpga_get_rev();
-	puts("Board: Technologic Systems TS-4100\n");
+	puts("Board: embeddedTS TS-4100\n");
 	if(fpgarev < 0)
 		printf("FPGA I2C communication failed: %d\n", fpgarev);
 	else

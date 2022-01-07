@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2017 Technologic Systems
+ * Copyright (C) 2017-2022 Technologic Systems, Inc. dba embeddedTS
  *
- * Author: Kris Bahnsen <kris@embeddedarm.com>
- * Based on work by Mark Featherston <mark@embeddedarm.com>
+ * Author: Kris Bahnsen <kris@embeddedTS.com>
+ * Based on work by Mark Featherston <mark@embeddedTS.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */

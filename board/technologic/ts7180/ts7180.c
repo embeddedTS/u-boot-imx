@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Technologic Systems
+ * Copyright (C) 2016-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -617,7 +617,7 @@ int checkboard(void)
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
 	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info3);
 	fpgarev = fpga_get_rev();
-	puts("Board: Technologic Systems TS-7180\n");
+	puts("Board: embeddedTS TS-7180\n");
 	if(fpgarev < 0)
 		printf("FPGA I2C communication failed: %d\n", fpgarev);
 	else
