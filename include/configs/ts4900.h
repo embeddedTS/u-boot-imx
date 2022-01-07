@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2010-2011 Freescale Semiconductor, Inc.
  *
- * Configuration settings for the Technologic Systems TS-4900
+ * Configuration settings for the embeddedTS TS-4900
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */

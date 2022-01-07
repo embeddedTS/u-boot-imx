@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2012 Freescale Semiconductor, Inc.
  *
- * Author: Mark Featherston <mark@embeddedarm.com.com>
+ * Author: Mark Featherston <mark@embeddedTS.com.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
