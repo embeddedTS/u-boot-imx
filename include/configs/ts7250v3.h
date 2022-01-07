@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright (C) 2020 Technologic Systems
+ * Copyright (C) 2020-2022 Technologic Systems, Inc. dba embeddedTS
  *
- * Configuration settings for the Technologic Systems TS-7250-V3
+ * Configuration settings for the embeddedTS TS-7250-V3
  */
 #ifndef __TS7250V3_H
 #define __TS7250V3_H
