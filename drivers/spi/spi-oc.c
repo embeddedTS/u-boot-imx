@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright 2021 Technologic Systems
+ * Copyright 2021-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * Opencore SPI controller
  */

@@ -1,6 +1,6 @@
 #undef DEBUG
 /*
- * Copyright (C) 2016, 2021 Technologic Systems
+ * Copyright (C) 2016, 2021-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */

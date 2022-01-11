@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Technologic Systems
+ * Copyright 2021-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -44,7 +44,7 @@
 #include "imx6ul.dtsi"
 
 / {
-	model = "Technologic Systems i.MX6ul TS-7180";
+	model = "embeddedTS i.MX6ul TS-7180";
 	compatible = "technologic,ts7180", "fsl,imx6ul";
 
 	aliases {
@@ -282,7 +282,7 @@
 };
 
 /* ethernet@20b4000 is ETH1/FEC1 (uses PHY 2 in U-Boot)/&fec2/eth0 (uses PHC 0 in Linux) */
-/* connector labeled eth0 here: https://docs.embeddedarm.com/TS-7180#Ethernet_Ports */
+/* connector labeled eth0 here: https://docs.embeddedTS.com/TS-7180#Ethernet_Ports */
 /* eth0 (lateral jack) "mii info" calls PHY 0x01 */
 &fec2 {
 	pinctrl-names = "default";
@@ -316,8 +316,8 @@
 
 
 /* ethernet@2188000 is ENET1/FEC0 (uses PHY 2 in U-Boot)/&fec1/eth1 (uses PHC 1 in linux) */
-/* connector labeled eth0 here: https://docs.embeddedarm.com/TS-7100#Ethernet_Ports */
-/* https://docs.embeddedarm.com/TS-7180#Ethernet_Ports */
+/* connector labeled eth0 here: https://docs.embeddedTS.com/TS-7100#Ethernet_Ports */
+/* https://docs.embeddedTS.com/TS-7180#Ethernet_Ports */
 /* eth1 (medial jack) "mii info" calls PHY 0x02 */
 &fec1 {
 	pinctrl-names = "default";

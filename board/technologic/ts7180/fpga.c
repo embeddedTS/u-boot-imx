@@ -1,6 +1,6 @@
 #undef DEBUG
 /*
- * Copyright (C) 2016, 2021 Technologic Systems
+ * Copyright (C) 2016, 2021-2022 Technologic Systems, Inc. dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -35,7 +35,7 @@ int fpga_get_rev(void)
 }
 
 /*
- * See: https://docs.embeddedarm.com/TS-7180#FPGA
+ * See: https://docs.embeddedTS.com/TS-7180#FPGA
  */
 void fpga_gpio_output(int io, int value)
 {

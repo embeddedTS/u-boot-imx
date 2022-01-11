@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0+
 
-# (C) Copyright 2021 Technologic Systems
+# (C) Copyright 2021-2022 Technologic Systems, Inc. dba embeddedTS
 
 obj-y  := ts7180.o
 

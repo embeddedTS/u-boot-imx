@@ -5,9 +5,9 @@
  * Author: Sebastien Bourdelin <sebastien.bourdelin@savoirfairelinux.com>
  *
  * Based on work from TS7680 code by:
- *   Kris Bahnsen <kris@embeddedarm.com>
- *   Mark Featherston <mark@embeddedarm.com>
- *   https://github.com/embeddedarm/u-boot/tree/master/board/technologic/ts7680
+ *   Kris Bahnsen <kris@embeddedTS.com>
+ *   Mark Featherston <mark@embeddedTS.com>
+ *   https://github.com/embeddedTS/u-boot/tree/master/board/technologic/ts7680
  *
  * Derived from MX28EVK code by
  *   Freescale Semiconductor, Inc.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2020 Technologic Systems
+ * Copyright (C) 2020-2022 Technologic Systems, Inc. dba embeddedTS
  */
 
 /* This file only valid on silabs built after Sep 25, 9am, 2019 */
