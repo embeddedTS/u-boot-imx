@@ -82,47 +82,16 @@
 #define CONFIG_SYS_I2C_SPEED		100000
 
 #undef CONFIG_BOOTDELAY
-#define CONFIG_BOOTDELAY		-1
+#define CONFIG_BOOTDELAY		3
 #define CONFIG_AUTOBOOT_KEYED 		1
 //#define CTRL(c) ((c)&0x1F)
 
 /*#define CONFIG_PREBOOT \
 	"run silochargeon;"*/
 
-#define FACTORY_DEFAULT        0
-#define FACTORY_SANDBOX        1
-#define FACTORY_LEGACY_SANDBOX 2
-#define FACTORY_DEV            3
-#define FACTORY FACTORY_SANDBOX
-#if defined(FACTORY)
-#  if (FACTORY == FACTORY_DEFAULT)
-#      define FACTORY_NFS \
-  	    "nfsip=192.168.0.36\0" \
-  	    "serverip=192.168.0.36\0" \
-	    "nfsroot=/nfsroot/imx6ul/\0"
-#  elif (FACTORY == FACTORY_SANDBOX)
-#    define FACTORY_NFS \
-  	    "nfsip=192.168.0.11\0" \
-  	    "serverip=192.168.0.11\0" \
-	    "sandbox=lionel\0" \
-	    "nfsroot=/u/sandbox/${sandbox}\0"
-#  elif (FACTORY == FACTORY_LEGACY_SANDBOX)
-#    define FACTORY_NFS \
-  	    "nfsip=192.168.0.11\0" \
-  	    "serverip=192.168.0.11\0" \
-	    "sandbox=.sand\0" \
-	    "nfsroot=/u/x/jessie-armel/boot-imx6ul${sandbox}\0"
-#  elif (FACTORY == FACTORY_DEV)
-#    define FACTORY_NFS \
-  	    "nfsip=192.168.1.102\0" \
-  	    "serverip=192.168.1.102\0" \
-	    "nfsroot=/home/lionel/src/production\0"
-#  endif
-#endif /* FACTORY */
-
 /* If a board already has an environment, where do we force this one? */
 #define FACTORY_MFG_ENV \
-	"bootcmd_mfg=echo Booted over USB, running test/prime;" \
+	"bootcmd_mfg=echo Booted via SDP, so running test/prime;" \
 		"if post;" \
 			"then ums mmc 1.1;" \
 			"mmc bootbus 1 1 0 2;" \
@@ -167,7 +136,6 @@
 	"initrd_high=0xffffffff\0" \
 	"autoload=no\0" \
 	"model=7180\0" \
-        FACTORY_NFS \
         FACTORY_MFG_ENV \
 	"clearenv=env default -f -a; env save;\0" \
 	"loadaddr=" __stringify(CONFIG_LOADADDR) "\0" \
@@ -179,7 +147,7 @@
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdtfile=imx6ul-ts7180.dtb\0" \
 	"clearbootcnt=mw.b 50004018 0;\0" \
-	"cmdline_append=console=ttymxc0,115200 init=/sbin/init\0" \
+	"cmdline_append=debug loglevel=8 systemd.log_level=info\0" \
 	"altbootcmd=echo taking some recovery action\0" \
 	"silochargeon=silabs scaps disable;" \
 		"if test $silopresent = '1';" \
@@ -222,21 +190,6 @@
 			"bootz ${kernel_addr_r} - ${fdtaddr};" \
 		"else echo Failed to load kernel from eMMC;" \
 		"fi;\0" \
-	"nfsboot-set-prod-params=if test -n \"${sandbox}\" ; then "      \
-		        "env set nfsip 192.168.0.11 ; "                  \
-		        "env set nfsroot /u/sandbox/${sandbox} ; "       \
-			"env set prod_prefix ${nfsip}:${nfsroot} ;"      \
-		"else;"                                                  \
-		        "env set nfsip 192.168.1.102 ; "                 \
-		        "env set nfsroot /home/lionel/src/production ; " \
-			"env set prod_prefix ${nfsip}:${nfsroot} ;"      \
-		"fi; "                                                   \
-		"dhcp;"                                                  \
-		"\0"                                                     \
-	"prod_boot="                              \
-		"run nfsboot-set-prod-params ; "  \
-		"run run-nfsboot-script ;"        \
-		"\0"                              \
 	"nfsboot-kernel=if nfs ${kernel_addr_r} ${nfsip}:${nfsroot}/boot/zImage;"            \
 		"then run silowaitcharge;"                                                   \
 			"setenv bootargs root=/dev/nfs ip=dhcp "                             \
@@ -257,7 +210,7 @@
 	"nfsboot=echo Booting from NFS ...;"                                      \
 		"if test -n \"${production}\" || test -n \"${sandbox}\" ; then "  \
 			"run prod_boot ; "                                        \
-		"else"                                                            \
+		"else "                                                           \
 			"env set autoload true ; "                                \
 			"dhcp && source ${loadaddr} ; "                           \
 		"fi;"                                                             \
@@ -295,21 +248,54 @@
                 "setexpr filesize ${filesize} + 1 ; " \
                 "mmc dev 0 1 ; " \
                 "mmc write ${loadaddr} 8a ${filesize} ;\0" \
-	"update-uboot=dhcp;"\
+	"update-uboot=dhcp; "\
 		"if nfs ${loadaddr} ${nfsip}:${nfsroot}/${u-boot-dir}${u-boot-bin}; then " \
                         "setexpr filesize ${filesize} / 200 ; " \
                         "setexpr filesize ${filesize} + 1 ; " \
                         "mmc dev 0 1;" \
                         "mmc write ${loadaddr} 8a ${filesize};"\
                 "fi;\0" \
+	"sdboot=echo Booting from the SD card ...;"                                          \
+		"if load mmc 0:1 ${scriptaddr} /boot/boot.ub;"                               \
+			"then echo Booting from custom /boot/boot.ub;"                       \
+			"source ${scriptaddr};"                                              \
+		"fi;"                                                                        \
+		"load mmc 0:1 ${fdtaddr} "                                                   \
+		  "/boot/imx6ul-ts${model}.dtb;"                                             \
+		"if load mmc 0:1 ${kernel_addr_r} /boot/zImage;"                             \
+			"then run silowaitcharge;"                                           \
+			"setenv bootargs root=/dev/mmcblk0p1 rootwait rw ${cmdline_append};" \
+			"bootz ${kernel_addr_r} - ${fdtaddr};"                               \
+		"else echo Failed to load kernel from the SD card;"                          \
+		"fi;\0"                                                                      \
+	"usbboot=echo Booting from USB ...;"                                            \
+		"usb start;"                                                            \
+		"if load usb 0:1 ${scriptaddr} /boot/boot.ub;"                          \
+			"then echo Booting from custom /boot/boot.ub;"                  \
+			"source ${scriptaddr};"                                         \
+		"fi;"                                                                   \
+		"load usb 0:1 ${fdtaddr} /boot/imx6ul-ts${model}.dtb; "                 \
+		"if load usb 0:1 ${kernel_addr_r} /boot/zImage;"                        \
+			"then run silowaitcharge;"                                      \
+			"setenv bootargs root=/dev/sda1 rootwait rw ${cmdline_append};" \
+			"bootz ${kernel_addr_r} - ${fdtaddr};"                          \
+		"else echo Failed to load kernel from USB;"                             \
+		"fi; "                                                                  \
+		"\0"                                                                    \
 	"update-fpga=dhcp; " \
 		"if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/ts7180.vme; " \
 			"then fpga load 0 ${loadaddr} ${filesize};" \
 		"fi;\0"
 
-#define CONFIG_BOOTCOMMAND \
-	"run usbprod; " \
-	"run emmcboot;"
+#define CONFIG_BOOTCOMMAND                     \
+	"if test $jpsdboot = 'on' ; then "     \
+		"run sdboot; "                 \
+		"run emmcboot; "               \
+	"else "                                \
+		"run usbprod || run usbboot; " \
+		"run sdboot; "                 \
+		"run emmcboot; "               \
+	"fi "
 
 #define CONFIG_SYS_MEMTEST_START	0x80000000
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x20000000)
