@@ -188,13 +188,6 @@ int dram_init(void)
 	return 0;
 }
 
-void fpga_mmc_init(void)
-{
-#if defined(HAVE_TSFPGA)
-	fpga_gpio_output(EN_SD_POWER, 1);
-#endif
-}
-
 void fpga_late_init(void)
 {
 #if defined(HAVE_TSFPGA)
@@ -596,6 +589,8 @@ int board_late_init(void)
         gpio_free(OPT_ID_1);
         gpio_free(OPT_ID_4);
         gpio_free(OPT_ID_5);
+
+	fpga_gpio_output(EN_SD_POWER, 1);
 
 	fpga_late_init();
 	red_led_on();
