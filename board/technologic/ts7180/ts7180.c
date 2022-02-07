@@ -516,6 +516,7 @@ int board_init(void)
 int board_late_init(void)
 {
 	int jpr;
+        int jpsw_n;
 	uint8_t opts = 0;
 
         debug("** board_late_init\n");
@@ -536,6 +537,10 @@ int board_late_init(void)
         gpio_direction_input(OPT_ID_4);
         gpio_direction_input(OPT_ID_5);
 
+        jpsw_n = gpio_get_value(PUSH_SW_CPUN);
+        if(!jpsw_n) env_set("jpsw", "on");
+	else env_set("jpsw", "off");
+
 	/* Onboard jumpers to boot to SD or break in u-boot */
 	jpr = gpio_get_value(NO_CHRG_JMPN);
 	if(jpr) env_set("jpnochrg", "off");
@@ -546,14 +551,8 @@ int board_late_init(void)
 	else env_set("jpsdboot", "on");
 
 	jpr = gpio_get_value(U_BOOT_JMPN);
-	env_set("jpuboot", "off");
 	if(!jpr) env_set("jpuboot", "on");
-	else {
-		if(env_get_ulong("rstuboot", 10, 1)) {
-			jpr = gpio_get_value(PUSH_SW_CPUN);
-			if(!jpr) env_set("jpuboot", "on");
-		}
-	}
+	else env_set("jpuboot", "off");
 
         /* Some other TS U-Boots handle opts in a separate parse_strap module */
 	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
@@ -580,7 +579,10 @@ int board_late_init(void)
 	if(is_mfg()) {
 		env_set("bootcmd", "mfg");
 		env_set("bootdelay", "1");
-	}
+	} else if (!gpio_get_value(U_BOOT_JMPN)) {
+		/* U-Boot jumper -> no autoboot */
+		env_set("bootdelay", "-1");
+        }
 
         gpio_free(SD_BOOT_JMPN);
         gpio_free(PUSH_SW_CPUN);
