@@ -96,7 +96,7 @@
 			"then ums mmc 1.1;" \
 			"mmc bootbus 1 1 0 2;" \
 			"mmc partconf 1 1 1 1;" \
-			"fuse prog -y 0 5 A070;" \
+			"fuse prog -y 0 5 A870;" \
 			"fuse prog -y 0 6 10;" \
 			"fuse prog -y 0 3 300000;" \
 			"i2c dev 0;" \

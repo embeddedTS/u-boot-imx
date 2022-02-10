@@ -115,7 +115,7 @@ int cpu_write_fuses(void)
 {
 	int ret = 0;
 
-	ret |= fuse_prog(0, 5, 0xA070);
+	ret |= fuse_prog(0, 5, 0xA870);
 	ret |= fuse_prog(0, 6, 0x10);
 	if(ret) {
 		printf("Fuses failed to write!\n");
