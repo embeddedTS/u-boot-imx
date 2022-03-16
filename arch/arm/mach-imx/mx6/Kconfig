@@ -411,7 +411,7 @@ config TARGET_MX6UL_ENGICAM
 	imply CMD_DM
 
 config TARGET_TS7100
-	bool "Support for Technologic Systems TS-7100"
+	bool "Support for embeddedTS TS-7100"
 	select MX6UL
 	select BOARD_LATE_INIT
 	select DM
