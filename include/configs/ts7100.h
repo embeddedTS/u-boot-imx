@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2020 Technologic Systems
+ * Copyright (C) 2019-2022 Technologic Systems dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  *

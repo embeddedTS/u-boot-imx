@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Technologic Systems
+ * Copyright (C) 2019-2022 Technologic Systems dba embeddedTS
  *
  * SPDX-License-Identifier:     GPL-2.0+
  */
@@ -86,26 +86,26 @@ const char *get_cpu_board_version(void)
 	static char model_str[24] = {0};
 
 	io_model = read_io_board_model();
-        raw_fpga_straps =  read_raw_fpga_straps();
+	raw_fpga_straps =  read_raw_fpga_straps();
 
-        cpu_board_rev |= ((raw_fpga_straps >> 12) & 0x01); // Rev A 0x01 strap on the FPGA
+	cpu_board_rev |= ((raw_fpga_straps >> 12) & 0x01); // Rev A 0x01 strap on the FPGA
 
-        if (cpu_board_rev & 0x1) {
+	if (cpu_board_rev & 0x1) {
 		snprintf(model_str, sizeof(model_str), "A");
 		return model_str;
-        }
+	}
 
-        if (io_model == 0) {
+	if (io_model == 0) {
 		snprintf(model_str, sizeof(model_str),
 			 "P2-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
-        } else if (io_model == 1) {
+	} else if (io_model == 1) {
 		snprintf(model_str, sizeof(model_str),
 			 "Am-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
-        } else {
+	} else {
 		snprintf(model_str, sizeof(model_str),
 			 "UNKNOWN-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
-        }
-        return model_str;
+	}
+	return model_str;
 }
 
 uint8_t read_cpu_board_opts(void)

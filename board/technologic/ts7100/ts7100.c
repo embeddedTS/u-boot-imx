@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2016, 2020 Technologic Systems
+ * Copyright (C) 2016-2022 Technologic Systems dba embeddedTS
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <asm/arch/clock.h>
+#include <asm/arch/crm_regs.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
-#include <asm/arch/crm_regs.h>
 #include <asm/arch/mx6-pins.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
@@ -18,10 +18,10 @@
 #include <fpga.h>
 #include <fsl_esdhc.h>
 #include <i2c.h>
-#include <miiphy.h>
 #include <lattice.h>
 #include <linux/sizes.h>
 #include <linux/fb.h>
+#include <miiphy.h>
 #include <mmc.h>
 #include <netdev.h>
 #include <usb.h>
@@ -446,10 +446,10 @@ int board_late_init(void)
 
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 
-        /*
-         * WARNING: All of these are wiped out after an "env default -a",
-         * until the board is reset.
-         */
+	/*
+	 * WARNING: All of these are wiped out after an "env default -a",
+	 * until the board is reset.
+	 */
 	env_set("model", "7100");
 
 	/* Need to read latched FPGA value
@@ -466,20 +466,20 @@ int board_late_init(void)
 	opts = (uint32_t)(read_io_board_opts() & 0xFF);
 	env_set_hex("io_opts", opts);
 
-        io_model = (opts & 0xf0) >> 4;
+	io_model = (opts & 0xf0) >> 4;
 	env_set_hex("io_model", io_model);
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-        if (io_model == 0) {
-          env_set("board_name", "TS-7100");
-          env_set("board_rev", "P2");
-        } else if (io_model == 1) {
-          env_set("board_name", "TS-7100-Z");
-          env_set("board_rev", "A");
-        } else {
-          env_set("board_name", "TS-7100");
-          env_set("board_rev", "A");
-        }
+	if (io_model == 0) {
+		env_set("board_name", "TS-7100");
+		env_set("board_rev", "P2");
+	} else if (io_model == 1) {
+		env_set("board_name", "TS-7100-Z");
+		env_set("board_rev", "A");
+	} else {
+		env_set("board_name", "TS-7100");
+		env_set("board_rev", "A");
+	}
 #endif
 
 	if(is_mfg()) {
