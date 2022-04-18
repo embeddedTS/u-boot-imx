@@ -235,7 +235,8 @@ static void spl_dram_init(void)
 	uint32_t reg = readl(FPGA_STRAPS);
 
 	mx6ul_dram_iocfg(16, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	if(reg != 0x4) {
+	/* If R230 is populated, there is 1G ram installed.  If not, 512 */
+	if (reg & 0x1 == 0x1) {
 		/* 4Gb Alliance AS4C256M16D3LB */
 		mx6_dram_cfg(&ts7250v3_sysinfo,
 			     &ts7250v3_512m_calibration,
