@@ -23,8 +23,6 @@
 
 extern int is_mfg(void);
 
-#define FPGA_FLASH_SELECT	IMX_GPIO_NR(4, 0)
-
 void mfgbd_state(struct udevice *dev, uint8_t state)
 {
 	uint8_t buf = state;
@@ -58,8 +56,8 @@ void mfg_result(int pass)
 	int ret;
 	struct udevice *dev;
 
-	ret = i2c_get_chip_for_busnum(2, 0x38, 0, &dev);
-	if(ret) {
+	ret = i2c_get_chip_for_busnum(0, 0x38, 0, &dev);
+	if (ret) {
 		printf("Can't talk to mfg board.\n");
 		return;
 	}
@@ -68,6 +66,8 @@ void mfg_result(int pass)
 	mfg_chirp(dev);
 	if(!pass) mfg_chirp(dev);
 
+	printf("\rMFG Result: %s\n", pass == 1 ? "passed" : "FAILED");
+	printf("Type <CTRL-C> for a U-Boot prompt.\n");
 	while(!ctrlc()) {
 		status_led_set(0, 0);
 		status_led_set(1, 0);
