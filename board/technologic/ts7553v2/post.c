@@ -377,6 +377,7 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	printf("Silab rev is 0x%x\n", silab_rev());
 
 	switch(opts) {
+	  case 0x6: // Option 6
 	  case 0x2: // Option 1
 		break;
 	  case 0x3: // Option 2
@@ -392,7 +393,8 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 
 
 	ret |= usbhub_test();
-	ret |= rtc_test();
+	if (opts != 0x6)
+		ret |= rtc_test();
 	ret |= micrel_phy_test();
 
 	ret |= emmc_test(destructive);
