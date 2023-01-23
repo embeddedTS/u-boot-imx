@@ -8,5 +8,5 @@ ifdef CONFIG_SPL_BUILD
 endif
 
 ifndef CONFIG_SPL_BUILD
-	obj-y += silabs.o mfg.o led.o
+	obj-y += mfg.o led.o
 endif
