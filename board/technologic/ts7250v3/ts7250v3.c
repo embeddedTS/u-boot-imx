@@ -58,39 +58,17 @@ int is_mfg(void)
 	return is_boot_from_usb();
 }
 
-extern int64_t silab_cmd(int argc, char *const argv[]);
-
-int wdog_en = 0;
-void hw_watchdog_init(void)
+char detect_pcb_rev(void)
 {
-#ifndef CONFIG_SPL_BUILD
-	char * const checkflag[] = {"silabs", "wdog"};
-	wdog_en = 1;
-	wdog_en = (u8)silab_cmd(2, checkflag);
-#endif
-}
+	uint32_t opts = readl(FPGA_STRAPS);
 
-void hw_watchdog_reset(void)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const feed[] = {"silabs", "wdog", "feed"};
-	static ulong lastfeed;
+	env_set_hex("opts", opts & 0xF);
 
-	if(wdog_en != 1) return;
-
-	if(get_timer(lastfeed) > 1000) {
-		silab_cmd(3, feed);
-		lastfeed = get_timer(0);
+	if(opts & (1 << 12)) {
+		return 'C';
+	} else {
+		return 'A';
 	}
-#endif
-}
-
-void reset_cpu(ulong addr)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const rebootcmd[] = {"silabs", "reboot"};
-	silab_cmd(2, rebootcmd);
-#endif
 }
 
 int dram_init(void)
@@ -261,14 +239,23 @@ int board_init(void)
 int board_late_init(void)
 {
 	uint32_t fpga_rev = readl(FPGA_REV);
-	uint32_t opts = readl(FPGA_STRAPS) & 0xF;
+	uint32_t opts = readl(FPGA_STRAPS);
+	char rev[2] = {0, 0};
 
-	env_set_hex("opts", opts);
+	rev[0] = detect_pcb_rev();
+
+	env_set_hex("opts", opts & 0xF);
 	env_set_hex("fpga_rev", fpga_rev & 0x7fffffff);
+
+	if (rev[0] == 'A') {
+		env_set("fdtname", "imx6ul-ts7250v3-reva");
+	} else {
+		env_set("fdtname", "imx6ul-ts7250v3");
+	}
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 	env_set("board_name", "TS-7250-V3");
-	env_set("board_rev", "A");
+	env_set("board_rev", rev);
 #endif
 
 	if(is_mfg()) {
@@ -284,8 +271,9 @@ int checkboard(void)
 	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t fpga_hash = readl(FPGA_HASH);
 
-	printf("Board: TS-7250-V3 REV A\n");
-	printf("FPGA:  Rev %d ", fpga_rev & 0x7fffffff);
+	printf("Board: TS-7250-V3 REV %c\n", detect_pcb_rev());
+
+	printf("FPGA: Rev %d ", fpga_rev & 0x7fffffff);
 
 	if(fpga_rev & (1 << 31))
 		printf("(%x-dirty)\n", fpga_hash);

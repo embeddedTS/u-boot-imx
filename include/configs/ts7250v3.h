@@ -52,7 +52,7 @@
 	"ramdisk_addr_r=" __stringify(RAMDISK_ADDR_R) "\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"fdtfile=imx6ul-ts7250v3.dtb\0" \
+	"fdtfile=${fdtname}.dtb\0" \
 	"console=ttymxc0,115200\0" \
 	"clearenv=mmc dev 0 1; mmc erase 2000 2000; mmc erase 3000 2000;\0" \
 	"nfsroot=192.168.0.36:/mnt/storage/imx6ul\0" \
