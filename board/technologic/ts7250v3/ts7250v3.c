@@ -248,9 +248,9 @@ int board_late_init(void)
 	env_set_hex("fpga_rev", fpga_rev & 0x7fffffff);
 
 	if (rev[0] == 'A') {
-		env_set("fdtname", "imx6ul-ts7250v3-reva");
+		env_set("fdtfile", "imx6ul-ts7250v3-reva.dtb");
 	} else {
-		env_set("fdtname", "imx6ul-ts7250v3");
+		env_set("fdtfile", "imx6ul-ts7250v3.dtb");
 	}
 
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
