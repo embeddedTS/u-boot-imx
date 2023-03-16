@@ -57,7 +57,7 @@
 	"nfsroot=192.168.0.36:/mnt/storage/imx6ul\0" \
 	"nfsboot=echo Booting from NFS ...;" \
 		"dhcp;" \
-		"nfs ${fdt_addr_r} ${nfsroot}/boot/" CONFIG_DEFAULT_DEVICE_TREE ".dtb;" \
+		"nfs ${fdt_addr_r} ${nfsroot}/boot/${fdtfile};" \
 		"nfs ${kernel_addr_r} ${nfsroot}/boot/zImage;" \
 		"setenv bootargs root=/dev/nfs rw ip=dhcp nfsroot=${nfsroot}${nfsroot_options} " \
 			"loglevel=4 console=${console};" \
