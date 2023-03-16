@@ -44,6 +44,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"autoload=no\0" \
 	"emmc_dev=0\0" \
+	"netretry=once\0" \
 	"clearenv=mmc dev 0 1; mmc erase 800 2000; mmc erase C00 2000;\0" \
 	"loadaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdtaddr=" __stringify(FDT_ADDR_R) "\0" \
