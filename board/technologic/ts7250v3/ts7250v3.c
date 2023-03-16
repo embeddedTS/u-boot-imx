@@ -16,6 +16,7 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/mach-imx/video.h>
+#include <fsl_wdog.h>
 #include <asm/io.h>
 #include <common.h>
 #include <env.h>
@@ -30,6 +31,7 @@
 #include <usb/ehci-ci.h>
 #include <asm/spl.h>
 #include "tsfpga.h"
+#include "super.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -241,7 +243,6 @@ int board_late_init(void)
 	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t opts = readl(FPGA_STRAPS);
 	char rev[2] = {0, 0};
-
 	rev[0] = detect_pcb_rev();
 
 	env_set_hex("opts", opts & 0xF);
@@ -266,19 +267,115 @@ int board_late_init(void)
 	return 0;
 }
 
+#ifndef CONFIG_SPL_BUILD
+void reset_cpu(ulong addr)
+{
+	struct watchdog_regs *wdog = (struct watchdog_regs *)WDOG1_BASE_ADDR;
+	char rev = detect_pcb_rev();
+
+	if (rev >= 'C') {
+		super_write(SUPER_CMDS, I2C_REBOOT);
+	} else {
+		u16 wcr = WCR_WDE;
+		wcr |= WCR_SRS; /* do not assert internal reset */
+
+		/* Write 3 times to ensure it works, due to IMX6Q errata ERR004346 */
+		writew(wcr, &wdog->wcr);
+		writew(wcr, &wdog->wcr);
+		writew(wcr, &wdog->wcr);
+	}
+
+	while (1) {}
+}
+
+int do_poweroff(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	char rev = detect_pcb_rev();
+	int ret;
+
+	if (rev >= 'C') {
+		ret = super_write(SUPER_CMDS, I2C_HALT);
+		if (ret)
+			return ret;
+
+		/* infinite loop during shutdown */
+		while (1) {}
+	}
+
+	return 0;
+}
+
 int checkboard(void)
 {
 	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t fpga_hash = readl(FPGA_HASH);
+	char rev = detect_pcb_rev();
+	uint16_t super_rev;
+	uint16_t reason;
+	int ret;
 
-	printf("Board: TS-7250-V3 REV %c\n", detect_pcb_rev());
-
+	printf("Board: TS-7250-V3 REV %c\n", rev);
 	printf("FPGA: Rev %d ", fpga_rev & 0x7fffffff);
-
 	if(fpga_rev & (1 << 31))
 		printf("(%x-dirty)\n", fpga_hash);
 	else
 		printf("(%x)\n", fpga_hash);
 
+	if (rev >= 'C') {
+		ret = super_read(SUPER_REV_INFO, &super_rev);
+		if (ret) {
+			printf("Supervisor: Rev Unknown!\n");
+			return 0;
+		}
+
+		printf("Supervisor: Rev %d ", super_rev & 0x7fff);
+		if (super_rev & (1 << 15))
+			printf("-dirty\n");
+		else
+			printf("\n");
+
+		printf("Reset reason: ");
+		ret = super_read(SUPER_REBOOT_REASON, &reason);
+		if (ret) {
+			printf("Unknown!\n");
+			return 0;
+		}
+
+		switch (reason) {
+		case REBOOT_REASON_POR:
+			printf("POR\n");
+			break;
+		case REBOOT_REASON_CPU_WDT:
+			printf("CPU WDT\n");
+			break;
+		case REBOOT_REASON_SOFTWARE_REBOOT:
+			printf("Software Reboot\n");
+			break;
+		case REBOOT_REASON_BROWNOUT:
+			printf("Brownout\n");
+			break;
+		case REBOOT_REASON_RTC_ALARM_REBOOT:
+			printf("RTC Alarm Reboot\n");
+			break;
+		case REBOOT_REASON_WAKE_FROM_PWR_CYCLE:
+			printf("Wake from PWR Cycle\n");
+			break;
+		case REBOOT_REASON_WAKE_FROM_WAKE_SIGNAL:
+			printf("Wake from WAKE_EN\n");
+			break;
+		case REBOOT_REASON_WAKE_FROM_RTC_ALARM:
+			printf("Wake from RTC Alarm\n");
+			break;
+		case REBOOT_REASON_WAKE_FROM_USB_VBUS:
+			printf("Wake from USB VBUS\n");
+			break;
+		default:
+			printf("Unknown\n");
+			break;
+		}
+
+	}
+
 	return 0;
 }
+#endif

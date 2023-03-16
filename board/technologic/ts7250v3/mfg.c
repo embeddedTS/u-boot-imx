@@ -20,6 +20,7 @@
 #include <usb_mass_storage.h>
 
 #include "tsfpga.h"
+#include "super.h"
 
 extern int is_mfg(void);
 
@@ -171,11 +172,36 @@ void start_ums(void)
 
 static int do_mfg(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
+	uint16_t value;
 	int ret = 0;
 
 	if(!is_mfg()) {
 		printf("MFG board not detected.\n");
 		return 1;
+	}
+
+	printf("Waiting for microcontroller....\n");
+	/* If its a Rev.C board, we must wait for the microcontroller
+		* this will wait for up to 15 seconds */
+	for (int i = 0; i < 150; i++) {
+		ret = super_read(SUPER_MODEL, &value);
+		if (ret == 0 && value == 0x7250) {
+			break;
+		} else {
+			ret = 1;
+			mdelay(100);
+		}
+	}
+
+	if (ret) {
+		printf("Microcontroller not found!\n");
+		/* To support older board revs we wont fail based on this alone
+		 * If there is a real failure, the following tests will actually
+		 * catch it. We need the above delay on REV C, but on REV A
+		 * it wont answer with that value. We can't reliably detect rev
+		 * until the renesas is finished progrmaming. REV C and later will
+		 * check the below tests for more specific failures */
+		ret = 0;
 	}
 
 	printf("Starting MFG, do not interrupt.\n");
