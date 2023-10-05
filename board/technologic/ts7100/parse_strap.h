@@ -3,7 +3,8 @@
 
 const char *get_board_model(void);
 const char *get_board_name(void);
-const char *get_cpu_board_version(void);
+const char get_cpu_board_version_char(void);
+const char *get_cpu_board_version_str(void);
 
 u32 get_board_rev(void);
 

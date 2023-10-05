@@ -437,8 +437,13 @@ int board_init(void)
 
 int board_late_init(void)
 {
-	uint32_t opts;
+	char fdtfile[64] = {0};
+	char rev_as_str[2] = {0};
+	uint32_t cpu_opts;
 	uint32_t io_model;
+	uint32_t io_opts;
+	uint32_t cpu_straps;
+	uint32_t fpga_straps;
 
 	hw_watchdog_reset();
 
@@ -447,40 +452,34 @@ int board_late_init(void)
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 
 	/*
-	 * WARNING: All of these are wiped out after an "env default -a",
-	 * until the board is reset.
+	 * WARNING: All of these are wiped out of the environment
+	 * after an "env default -a", until the board is reset.
 	 */
-	env_set("model", "7100");
+	env_set("model", get_board_model());
 
-	/* Need to read latched FPGA value
-	 * bits 3:0 are FPGA GPIO bank 3, 5:2 and are purely straps
-	 * bits 5:4 are FPGA GPIO bank 3, 12:11 and are DIO_18:DIO_17
-	 * bank 3 12:11 are latched values of DIO_18:DIO_17 after unreset
-	 */
-	opts = readl(0x50004050); /* DIO bank 3 */
-	opts = (((opts & 0x1800) >> 7) | ((opts & 0x3C) >> 2));
-	opts ^= 0x3F;
-	env_set_hex("opts", opts);
+	fpga_straps = read_raw_fpga_straps();
+	env_set_hex("raw_fpga_straps", fpga_straps);
 
-	/* Read and parse 6UL pins used for IO board strapping */
-	opts = (uint32_t)(read_io_board_opts() & 0xFF);
-	env_set_hex("io_opts", opts);
+	cpu_straps = read_raw_cpu_straps();
+	env_set_hex("raw_cpu_straps", cpu_straps);
 
-	io_model = (opts & 0xf0) >> 4;
+	cpu_opts = read_cpu_board_opts();
+	env_set_hex("opts", cpu_opts);
+
+	io_model = read_io_board_model();
 	env_set_hex("io_model", io_model);
 
-#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	if (io_model == 0) {
-		env_set("board_name", "TS-7100");
-		env_set("board_rev", "P2");
-	} else if (io_model == 1) {
-		env_set("board_name", "TS-7100-Z");
-		env_set("board_rev", "A");
-	} else {
-		env_set("board_name", "TS-7100");
-		env_set("board_rev", "A");
-	}
-#endif
+	snprintf(fdtfile, sizeof(fdtfile),
+		 "imx6ul-ts%s-%d.dtb", get_board_model(), io_model);
+	env_set("fdtfile", fdtfile);
+
+	io_opts = read_io_board_opts();
+	env_set_hex("io_opts", io_opts);
+
+	env_set("board_name", get_board_name());
+	rev_as_str[0] = get_cpu_board_version_char();
+	env_set("board_rev", rev_as_str);
+	env_set("board_rev_straps", get_cpu_board_version_str());
 
 	if(is_mfg()) {
 		env_set("bootcmd", "mfg");
@@ -489,12 +488,6 @@ int board_late_init(void)
 
 	return 0;
 }
-
-u32 get_board_rev(void)
-{
-	return get_cpu_rev();
-}
-
 
 #ifdef CONFIG_BOOTCOUNT_LIMIT
 void bootcount_store(ulong a)
@@ -521,49 +514,8 @@ ulong bootcount_load(void)
 }
 #endif //CONFIG_BOOTCOUNT_LIMIT
 
-#if defined(OVERRIDE_BOARDINFO_C)
-extern int8_t i2c_eeprom_read(uint8_t adr, uint16_t subadr, uint8_t *buf, int len);
-
-int silab_rev(uint8_t *rev_p)
-{
-	int ret;
-
-#if true
-	ret = i2c_eeprom_read(0x54, 0x800, rev_p, 1);
-	return ret;
-#else
-	struct udevice *dev;
-	printf("Read: Adr 0x%X, subadr 0x%X\n", adr, subadr);
-
-	ret = i2c_get_chip_for_busnum(0, adr, 2, &dev);
-	if (ret) {
-		pr_err("couldn't get i2c bus - %d\n", ret);
-		return ret;
-	}
-	return dm_i2c_read(dev, subadr, buf, 1);
-#endif
-}
-
-int print_silab_rev()
-{
-	int rc;
-	uint8_t val;
-
-	// we need to pick i2c_eeprom_read from silabs/tsmicroctl
-	rc = silab_rev(&val);
-	if (rc) {
-		printf("Silab: i2c failure\n");
-		return rc;
-	}
-	printf("Silab: Rev 0x%X\n", val);
-	// else:
-	return 0;
-}
-
 int checkboard(void)
 {
-
 	// Model is printed 
 	return 0;
 }
-#endif

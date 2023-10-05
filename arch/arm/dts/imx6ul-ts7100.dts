@@ -328,19 +328,6 @@
 		"",               "",               "",               "";
 };
 
-/* gpiochip7; FPGA dio3: */
-&gpio6 {
-	gpio-line-names =
-		"CPU_TOUCH_IRQ#", "",               "C6_PAD",         "B8_PAD",
-		"C9_PAD",         "C8_PAD",         "NIM_3V3#_4V",    "DIO_16_PAD",
-		"NIM_PWR_ON",     "SEL_NIM_USB",    "DIO_FAULT#",     "",
-		"",               "",               "EN_BK_LT#",      "",
-		"",               "",               "",               "",
-		"",               "",               "",               "",
-		"",               "",               "",               "",
-		"",               "",               "",               "";
-};
-
 &uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart1>;
@@ -568,16 +555,15 @@
 
 	ts7100_pinctrl_hog: hoggrp {
 		fsl,pins = <
-			/*
-			 * 0x1b020 == Hyst., 100k PU, 50 mA drive
-			 * 0x1a020 == no pull resistor
-			 * 0x13020 == 100k PD
-			 */
-
-			/* TODO Verify pull state of these pins! */
-			MX6UL_PAD_LCD_DATA02__GPIO3_IO07	0x13020 /* ISA_RESET */
-			MX6UL_PAD_LCD_DATA03__GPIO3_IO08	0x13020 /* ISA_IOCHK */
-
+		/*
+		 * |------------+-----+------+-------------+----------+---------+--------+----------------|
+		 * |      value | Hys | Pull | Pull/Keep   | P/K En   | Speed   | Slew   | Drive Strength |
+		 * |------------+-----+------+-------------+----------+---------+--------+----------------|
+		 * |    0x13020 | Yes | 100k | pull (down) | enabled  | <50 MHz | slow   | R0/4 = 55 mA   |
+		 * |    0x1a020 | Yes | 100k | pull (up)   | DISABLED | <50 MHz | slow   | R0/4 = 55 mA   |
+		 * |    0x1b020 | Yes | 100k | pull (up)   | enabled  | <50 MHz | slow   | R0/4 = 55 mA   |
+		 * |------------+-----+------+-------------+----------+---------+--------+----------------|
+		 */
 			MX6UL_PAD_LCD_DATA04__GPIO3_IO09	0x1a020 /* LCD_PIN7 */
 			MX6UL_PAD_LCD_DATA05__GPIO3_IO10	0x1a020 /* LCD_PIN8 */
 			MX6UL_PAD_LCD_DATA06__GPIO3_IO11	0x1a020 /* LCD_PIN9 */
@@ -597,8 +583,10 @@
 
 			MX6UL_PAD_UART2_RX_DATA__GPIO1_IO21	0x13020 /* EN_XBEE_USB */
 			MX6UL_PAD_SNVS_TAMPER1__GPIO5_IO01	0x1b029 /* FPGA IRQ */
-			MX6UL_PAD_NAND_RE_B__GPIO4_IO00		0x1b029 /* FPGA_FLASH_SELECT */
-			MX6UL_PAD_NAND_WE_B__GPIO4_IO01		0x1b029 /* DETECT_94-120 */
+			MX6UL_PAD_NAND_RE_B__GPIO4_IO00 	0x1b029 /* JTAG_FPGA_TDO */
+			MX6UL_PAD_NAND_WE_B__GPIO4_IO01 	0x1b029 /* DETECT_9471 */
+
+			MX6UL_PAD_JTAG_TDO__GPIO1_IO12  	0x1a020 /* Rev B Strap */
 		>;
 	};
 
