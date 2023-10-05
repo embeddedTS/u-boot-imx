@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2022 Technologic Systems dba embeddedTS
+ * Copyright (C) 2020-2023 Technologic Systems dba embeddedTS
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -274,186 +274,72 @@
 	fsl,ldo-bypass = <0>; /* DCDC, ldo-enable */
 };
 
+/* gpiochip0; CPU GPIO1: */
 &gpio1 {
 	gpio-line-names =
-		"AN_CH1",
-		"AN_CH2",
-		"I2C_1_CLK",
-		"I2C_1_DAT",
-		"EN_SD_CARD_3.3V",
-		"AN_CH3",
-		"ETH_MDIO",
-		"ETH_MDC",
-		"AN_CH4",
-		"AN_CH5",
-		"",
-		"",
-		"",
-		"FPGA_RESET",
-		"MAGNET_IRQ",
-		"",
-		"CONSOLE_TXD",
-		"CONSOLE_RXD",
-		"EN_RED_LED#",
-		"EN_GRN_LED#",
-		"",
-		"EN_XBEE_USB",
-		"CAN_2_TXD",
-		"CAN2_RXD_3V",
-		"UART3_TXD",
-		"UART3_RXD",
-		"UART3_CTS#",
-		"UART3_RTS#",
-		"UART4_TXD",
-		"UART4_RXD",
-		"UART5_RXD_3V",
-		"UART5_TXD";
+		"AN_CH4",        "RTC_BATT_FAIL", "I2C_1_CLK",     "I2C_1_DAT",
+		"AN_CH0",        "AN_CH1",        "",              "",
+		"AN_CH2",        "AN_CH3",        "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "";
 };
 
-&gpio2 {
-	gpio-line-names =
-		"ENET1_RX_DATA0",
-		"ENET1_RX_DATA1",
-		"ENET1_RX_EN",
-		"ENET1_TX_DATA0",
-		"ENET1_TX_DATA1",
-		"ENET1_TX_EN",
-		"ENET1_TX_CLK",
-		"ENET1_RX_ER",
-		"ENET2_RX_DATA0",
-		"ENET2_RX_DATA1",
-		"ENET2_RX_EN",
-		"ENET2_TX_DATA0",
-		"ENET2_TX_DATA1",
-		"ENET2_TX_EN",
-		"ENET2_TX_CLK",
-		"ENET2_RX_ER",
-		"EMMC_CMD",
-		"EMMC_CLK",
-		"EMMC_D0",
-		"EMMC_D1",
-		"EMMC_D2",
-		"EMMC_D3",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"";
-};
-
+/* gpiochip4; CPU GPIO2: */
 &gpio3 {
 	gpio-line-names =
-		"EN_USB_5V",
-		"",
-		"",
-		"UART4_CTS#",
-		"WDOG#",
-		"",
-		"",
-		"ISA_RESET",
-		"ISA_IOCHK",
-		"LCD_PIN7",
-		"LCD_PIN8",
-		"LCD_PIN9",
-		"LCD_PIN10",
-		"CAN_1_TXD",
-		"CAN1_RXD_3V",
-		"LCD_PIN11",
-		"LCD_PIN12",
-		"LCD_PIN13",
-		"LCD_PIN14",
-		"LCD_WR#",
-		"LCD_EN",
-		"UART7_TXD",
-		"UART7_RXD",
-		"LCD_RS",
-		"LCD_BIAS",
-		"NIM_PWR_ON",
-		"WIFI_IRQ#",
-		"EN_DIO_FET",
-		"SEL_XBEE_USB",
-		"",
-		"",
-		"";
+		"POWER_FAIL_3V", "FPGA_IRQ",      "",              "",
+		"EN_RELAY_1",    "EN_RELAY_2",    "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "",
+		"",              "",              "",              "";
 };
 
+/* gpiochip5; FPGA dio: */
 &gpio4 {
 	gpio-line-names =
-		"FPGA_FLASH_SELECT",
-		"DETECT_94-120",
-		"EIM_AD_08",
-		"EIM_AD_09",
-		"EIM_AD_10",
-		"EIM_AD_11",
-		"EIM_AD_12",
-		"EIM_AD_13",
-		"EIM_AD_14",
-		"EIM_AD_15",
-		"EIM_IRQ",
-		"EIM_BLK",
-		"NAND_CE0_B",  /* WIFI SPI CLK  & IO opt bit 0 */
-		"NAND_CE1_B",  /* WIFI SPI MOSI & IO model bit 1 */
-		"SPI_3_MOSI",
-		"SPI_3_MISO",
-		"EIM_WAIT#",
-		"EIM_CS0#",
-		"EIM_OE#",
-		"EIM_WE#",
-		"EIM_LBA#",
-		"EIM_AD_00",
-		"EIM_AD_01",
-		"EIM_AD_02",
-		"EIM_AD_03",
-		"EIM_AD_04",
-		"EIM_AD_05",
-		"EIM_AD_06",
-		"EIM_AD_07",
-		"",
-		"",
-		"";
+		"DIO_1_OUT", "DIO_2_OUT", "DIO_1_IN",  "DIO_2_IN",
+		"DIO_3_IN",  "DIO_6",     "DIG_IN_1",  "DIG_IN_2",
+		"DIG_IN_3",  "EN_CL_1",   "EN_CL_2",   "EN_CL_3",
+		"",          "",          "EN_CL_4",   "EN_HS_SW",
+		"",          "",          "",          "",
+		"",          "",          "",          "",
+		"",          "",          "",          "",
+		"",          "",          "",          "";
 };
 
+/* gpiochip6; FPGA dio2: */
 &gpio5 {
 	gpio-line-names =
-		"GYRO_INT",
-		"FPGA_IRQ",
-		"EN_EMMC_3.3V",
-		"GPIO_DVFS",
-		"",
-		"WIFI_RESET#",
-		"EN_WIFI_PWR",
-		"EN_CL_1",
-		"EN_CL_2",
-		"EN_CL_3",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"";
+		"EN_EMMC_3V3#",   "EN_ADC1_12V",    "EN_ADC2_12V",    "EN_ADC3_12V",
+		"EN_ADC4_12V",    "EN_USB_HOST_5V", "PHY_RESET#",     "WIFI_RESET#",
+		"IO_RED_LED#",    "IO_GREEN_LED#",  "",               "",
+		"EN_PROG_SILAB",  "DIO_3_OUT",      "EN_HSPWM",       "EN_LSPWM",
+		"",               "",               "",               "",
+		"",               "",               "",               "",
+		"",               "",               "",               "",
+		"",               "",               "",               "";
 };
 
+/* gpiochip7; FPGA dio3: */
+&gpio6 {
+	gpio-line-names =
+		"CPU_TOUCH_IRQ#", "",               "C6_PAD",         "B8_PAD",
+		"C9_PAD",         "C8_PAD",         "NIM_3V3#_4V",    "DIO_16_PAD",
+		"NIM_PWR_ON",     "SEL_NIM_USB",    "DIO_FAULT#",     "",
+		"",               "",               "EN_BK_LT#",      "",
+		"",               "",               "",               "",
+		"",               "",               "",               "",
+		"",               "",               "",               "",
+		"",               "",               "",               "";
+};
 
 &uart1 {
 	pinctrl-names = "default";
