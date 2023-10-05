@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Technologic Systems dba embeddedTS
+ * Copyright (C) 2019-2023 Technologic Systems dba embeddedTS
  *
  * SPDX-License-Identifier:     GPL-2.0+
  */
@@ -20,13 +20,15 @@
 #define	UART2_TX_DATA	IMX_GPIO_NR(1, 20)	/* Bit 1 / IO opt bit 1 */
 #define	UART5_TX_DATA	IMX_GPIO_NR(1, 30)	/* Bit 2 / IO opt bit 2 */
 #define	UART4_TX_DATA	IMX_GPIO_NR(1, 28)	/* Bit 3 / IO opt bit 3 */
-#define	NAND_CE1_B	IMX_GPIO_NR(4, 14)	/* Bit 4 / IO model bit 1 */
-#define	UART3_TX_DATA	IMX_GPIO_NR(1, 24)	/* Bit 5 / IO model bit 0 */
-#define	LCD_DATA08	IMX_GPIO_NR(3, 13)	/* Bit 6 / IO model bit 2 */
+#define	UART3_TX_DATA	IMX_GPIO_NR(1, 24)	/* Bit 4 / IO model bit 0 */
+#define	LCD_DATA08	IMX_GPIO_NR(3, 13)	/* Bit 5 / IO model bit 1 */
+#define	NAND_CE1_B	IMX_GPIO_NR(4, 14)	/* Bit 6 / IO model bit 2 */
 #define	UART3_CTS_B	IMX_GPIO_NR(1, 26)	/* Bit 7 / IO model bit 3 */
+#define	JTAG_TDO_N15	IMX_GPIO_NR(1, 12)	/* Rev B on pad N15 */
 
 /*
- * For Rev A:
+ * For Rev A: IO_MODEL is non-zero
+ * For Rev B: MX6UL_PAD_JTAG_TDO__GPIO1_IO12 (pad N15) reads as 1 instead of 0
  *
  * Five straps on the CPU board go into the FPGA:
  *   RAM size:
@@ -58,6 +60,9 @@ static iomux_v3_cfg_t const strap_pads[] = {
 	MX6_PAD_LCD_DATA08__GPIO3_IO13 | MUX_PAD_CTRL(STRAP_PAD_PU_CTRL),
 	/* IO Strap 7, UART3_CTS */
 	MX6_PAD_UART3_CTS_B__GPIO1_IO26 | MUX_PAD_CTRL(STRAP_PAD_PU_CTRL),
+
+	/* JTAG_TDO (Pad N15) */
+	MX6_PAD_JTAG_TDO__GPIO1_IO12 | MUX_PAD_CTRL(STRAP_PAD_PU_CTRL),
 };
 
 const char *get_board_model(void)
@@ -68,42 +73,96 @@ const char *get_board_model(void)
 const char *get_board_name(void)
 {
 	uint8_t io_model;
+	static char name_str[12] = {0};
 
 	io_model = read_io_board_model();
-	if (io_model == 0) {
-		return "TS-7100";
-	} else if (io_model == 1) {
-		return "TS-7100-Z";
+	if (io_model == 1) {
+		snprintf(name_str, sizeof(name_str),
+			 "TS-7100-Z");
+	} else if (io_model == 0) {
+		snprintf(name_str, sizeof(name_str),
+			 "TS-%4s", get_board_model());
+	} else {
+		snprintf(name_str, sizeof(name_str),
+			 "TS-%4s-C%02d", get_board_model(), io_model);
 	}
-	return "TS-7100";
+	return name_str;
 }
 
-const char *get_cpu_board_version(void)
+const char get_cpu_board_version_char(void)
 {
-	uint8_t io_model = 0;
-	uint8_t cpu_board_rev = 0;
+	uint16_t raw_cpu_straps = 0;
 	uint16_t raw_fpga_straps = 0;
-	static char model_str[24] = {0};
 
-	io_model = read_io_board_model();
+	raw_cpu_straps =  read_raw_cpu_straps();
 	raw_fpga_straps =  read_raw_fpga_straps();
 
-	cpu_board_rev |= ((raw_fpga_straps >> 12) & 0x01); // Rev A 0x01 strap on the FPGA
+	/*
+	 * Any board rev newer than the newest here in this version of
+	 * U-Boot *should* appear to be the newest board rev mentioned
+	 * below (barring the unexpected):
+	 */
+	if (raw_cpu_straps & (1 << 8)) {     // Rev B strap on the 6UL
+		return 'B';
+	}
+	if (raw_fpga_straps & (1 << 12)) {   // Rev A strap on the FPGA
+		return 'A';
+	}
 
-	if (cpu_board_rev & 0x1) {
-		snprintf(model_str, sizeof(model_str), "A");
+	/*
+	 * If we reach this point, there is a problem with reading the
+	 * hardware.  Return an invalid revision character to flag
+	 * attention on the boot screen and that compares lower than 'A'.
+	 */
+	return '0';
+}
+
+const char *get_straps_str(void)
+{
+	uint16_t raw_cpu_straps = 0;
+	uint16_t raw_fpga_straps = 0;
+	static char straps_str[10] = {0};
+
+	raw_cpu_straps =  read_raw_cpu_straps();
+	raw_fpga_straps =  read_raw_fpga_straps();
+
+	snprintf(straps_str, sizeof(straps_str),
+		 "%04x-%04x", raw_cpu_straps, raw_fpga_straps);
+	return straps_str;
+}
+
+const char *get_cpu_board_version_str(void)
+{
+	char rev_char = 0;
+	uint8_t io_model = 0;
+	static char model_str[24] = {0};
+
+	rev_char = get_cpu_board_version_char();
+
+	if (rev_char != '0') {
+		snprintf(model_str, sizeof(model_str),
+			 "%c/%s", rev_char, get_straps_str());
 		return model_str;
 	}
 
+	/*
+	 * Now handle some strange cases that appear on
+	 * broken/unsupported hardware that we want to quickly
+	 * recognize and debug if/when they happen.
+	 */
+	io_model = read_io_board_model();
 	if (io_model == 0) {
 		snprintf(model_str, sizeof(model_str),
-			 "P2-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+			 "P2/%s", get_straps_str());
 	} else if (io_model == 1) {
 		snprintf(model_str, sizeof(model_str),
-			 "Am-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+			 "A/%s", get_straps_str());
+	} else if (io_model == 3) {
+		snprintf(model_str, sizeof(model_str),
+			 "B/%s", get_straps_str());
 	} else {
 		snprintf(model_str, sizeof(model_str),
-			 "UNKNOWN-%02x/%04x-%04x", cpu_board_rev, read_raw_cpu_straps(), raw_fpga_straps);
+			 "UNKNOWN_IO_MODEL_%02d/%s", io_model, get_straps_str());
 	}
 	return model_str;
 }
@@ -155,6 +214,8 @@ uint16_t read_raw_cpu_straps(void)
 		gpio_request(LCD_DATA08, "LCD_DATA08");
 		gpio_request(UART3_CTS_B, "UART3_CTS_B");
 
+		gpio_request(JTAG_TDO_N15, "JTAG_TDO_N15");
+
 		gpio_direction_input(NAND_CE0_B);
 		gpio_direction_input(UART2_TX_DATA);
 		gpio_direction_input(UART5_TX_DATA);
@@ -163,6 +224,8 @@ uint16_t read_raw_cpu_straps(void)
 		gpio_direction_input(NAND_CE1_B);
 		gpio_direction_input(LCD_DATA08);
 		gpio_direction_input(UART3_CTS_B);
+
+		gpio_direction_input(JTAG_TDO_N15);
 
 		mdelay(1);
 
@@ -175,12 +238,44 @@ uint16_t read_raw_cpu_straps(void)
 		cpu_straps |= (gpio_get_value(NAND_CE1_B) << 6);
 		cpu_straps |= (gpio_get_value(UART3_CTS_B) << 7);
 
-		/* All straps are 1 = resistor populated. This is inverted from
+		cpu_straps |= (gpio_get_value(JTAG_TDO_N15) << 8);
+
+		/*
+		 * All straps are 1 = resistor populated. This is inverted from
 		 * the logic level read from the IO pins.
 		 */
-		cpu_straps ^= 0xFF;
+		cpu_straps ^= 0x1FF;
 
 		read = 1;
 	}
 	return cpu_straps;
+}
+
+uint16_t read_raw_fpga_straps(void)
+{
+	static uint16_t fpga_straps;
+	static uint8_t read;
+
+	/* 
+	 * Here and now we need to read latched FPGA values.
+	 *
+	 *    | Pull   | Pad | Bank | Bit | FPGA Label | Net Label   |
+	 *    |--------+-----+------+-----+------------+-------------+
+	 *    | RN17-D | C13 |    3 |  12 | IO_B1      | SEL_NIM_USB |
+	 *    | RN17-C | A13 |    3 |  11 | DONE_IO_B0 | NIM_PWR_ON  |
+	 *    | R34    | C8  |    3 |   3 | IO_B0_SCL  | Strap       |
+	 *    | R28    | C9  |    3 |   2 | IO_B0      | Strap       |
+	 *    | R29    | B8  |    3 |   1 | IO_B0_SDA  | Strap       |
+	 *    | R36    | C6  |    3 |   0 | IO_B0      | RAM Strap   |
+	 *    | GND    | G12 |      |     | IO_B1      | Rev. A ID   |
+	 *    |--------+-----+------+-----+------------+-------------+
+	 */
+	if (!read) {
+		fpga_straps = readw(0x50004050); /* DIO bank 3 */
+		fpga_straps ^= 0xFFFF;
+		fpga_straps &= 0x180F;
+		read = 1;
+	}
+
+	return fpga_straps;
 }
