@@ -55,9 +55,8 @@
 	"ramdisk_addr_r=" __stringify(RAMDISK_ADDR_R) "\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"fdtfile=imx6ul-ts7100-0.dtb\0" \
 	"clearbootcnt=mw.b 50004018 0;\0" \
-	"cmdline_append=console=ttymxc0,115200 init=/sbin/init\0" \
+	"console=ttymxc0,115200\0" \
 	"altbootcmd=echo taking some recovery action\0" \
 	"chrg_pct=60\0" \
 	"chrg_verb=0\0" \
@@ -73,39 +72,7 @@
 			"else silabs scaps wait pct ${chrg_pct};" \
 		"fi;" \
 	"fi;\0" \
-	"usbprod=usb start;" \
-		"if usb storage;" \
-			"then echo Checking USB storage for updates;" \
-			"if load usb 0:1 ${loadaddr} /tsinit.scr;" \
-				"then led green on;" \
-				"source ${loadaddr};" \
-				"led red off;" \
-				"exit;" \
-			"fi;" \
-			"if load usb 0:1 ${loadaddr} /tsinit.scr.uimg;" \
-				"then led green on;" \
-				"source ${loadaddr};" \
-				"led red off;" \
-				"exit;" \
-			"fi;" \
-		"fi;\0" \
-	"emmcboot=echo Booting from the eMMC ...;" \
-		"if load mmc ${emmc_dev}:1 ${loadaddr} /boot/boot.ub;" \
-			"then echo Booting from custom /boot/boot.ub;" \
-			"source ${loadaddr};" \
-		"fi;" \
-		"load mmc ${emmc_dev}:1 ${fdtaddr} " \
-		  "/boot/imx6ul-ts${model}-${io_model}.dtb;" \
-		"if load mmc ${emmc_dev}:1 ${loadaddr} /boot/zImage;" \
-			"then run silowaitcharge;" \
-			"setenv bootargs root=/dev/mmcblk${emmc_dev}p1 rootwait rw " \
-			  "cpu_opts=0x${opts} io_opts=0x${io_opts} " \
-			  "io_model=0x${io_model} ${cmdline_append};" \
-			"bootz ${loadaddr} - ${fdtaddr};" \
-		"else echo Failed to load kernel from eMMC;" \
-		"fi;\0" \
 	"nfsboot-kernel=if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/zImage;" \
-			"then run silowaitcharge;" \
 			"setenv bootargs root=/dev/nfs ip=dhcp " \
 			  "nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \
 			  "cpu_opts=0x${opts} io_opts=0x${io_opts} " \
