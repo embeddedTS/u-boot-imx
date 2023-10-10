@@ -14,6 +14,7 @@
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
 
+#include "tsfpga.h"
 #include "parse_strap.h"
 
 #define	NAND_CE0_B	IMX_GPIO_NR(4, 13)	/* Bit 0 / IO opt bit 0 */
@@ -255,6 +256,8 @@ uint16_t read_raw_fpga_straps(void)
 {
 	static uint16_t fpga_straps;
 	static uint8_t read;
+	uint32_t fpga_rev = readl(FPGA_REV);
+	uint16_t saved_straps;
 
 	/* 
 	 * Here and now we need to read latched FPGA values.
@@ -274,6 +277,16 @@ uint16_t read_raw_fpga_straps(void)
 		fpga_straps = readw(0x50004050); /* DIO bank 3 */
 		fpga_straps ^= 0xFFFF;
 		fpga_straps &= 0x180F;
+		if (fpga_rev >= 8) {
+			saved_straps = readl(FPGA_STRAPS);
+			saved_straps |= (fpga_straps << 16);
+			writel(saved_straps, FPGA_STRAPS);
+		} else if (fpga_rev == 7) {
+			/* Intermediate version with this enhancement but only 16 bits of STRAPS save space */
+			saved_straps = readw(FPGA_STRAPS);
+			saved_straps |= (fpga_straps << 8);
+			writew(saved_straps, FPGA_STRAPS);
+		}
 		read = 1;
 	}
 
