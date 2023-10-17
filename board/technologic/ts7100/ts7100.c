@@ -440,6 +440,7 @@ int board_late_init(void)
 	char fdtfile[64] = {0};
 	char rev_as_str[2] = {0};
 	uint32_t cpu_opts;
+	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t io_model;
 	uint32_t io_opts;
 	uint32_t cpu_straps;
@@ -481,6 +482,8 @@ int board_late_init(void)
 	env_set("board_rev", rev_as_str);
 	env_set("board_rev_straps", get_cpu_board_version_str());
 
+	env_set_hex("fpga_rev", fpga_rev & 0x7fffffff);
+
 	if(is_mfg()) {
 		env_set("bootcmd", "mfg");
 		env_set("bootdelay", "1");
@@ -516,6 +519,15 @@ ulong bootcount_load(void)
 
 int checkboard(void)
 {
-	// Model is printed 
+	uint32_t fpga_rev = readl(FPGA_REV);
+	uint32_t fpga_hash = readl(FPGA_HASH);
+
+	/* TS-7100 variant info goes here */
+	printf("FPGA: Rev %d ", fpga_rev & 0x7fffffff);
+	if (fpga_rev & (1 << 31))
+		printf("(%x-dirty)\n", fpga_hash);
+	else
+		printf("(%x)\n", fpga_hash);
+
 	return 0;
 }
