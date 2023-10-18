@@ -95,36 +95,6 @@
 		"then "								\
 			"run nfsboot-kernel ;"                          \
 		"fi\0"	                                		\
-	"bootcmd_mfg=echo Booted over USB, running test/prime;" \
-		"if post;" \
-			"then ums mmc 0.1;" \
-			"mmc bootbus 0 1 0 2;" \
-			"mmc partconf 0 1 1 1;" \
-			"fuse prog -y 0 5 A070;" \
-			"fuse prog -y 0 6 10;" \
-			"fuse prog -y 0 3 300000;" \
-			"i2c mw 38 0.0 83;" \
-			"i2c mw 38 0.0 3;" \
-			"while true;" \
-				"do led green on;" \
-				"i2c mw 38 0.0 23;" \
-				"sleep 1;" \
-				"led green off;" \
-				"i2c mw 38 0.0 3;" \
-				"sleep 1;" \
-			"done;" \
-		"else echo Test Failed;" \
-			"i2c mw 38 0.0 83;" \
-			"i2c mw 38 0.0 3;" \
-			"while true;" \
-				"do led red on;" \
-				"i2c mw 38 0.0 13;" \
-				"sleep 1;" \
-				"led red off;" \
-				"i2c mw 38 0.0 3;" \
-				"sleep 1;" \
-			"done;" \
-		"fi;\0" \
 	BOOTENV
 
 #define FDT_ADDR_R			0x83000000
