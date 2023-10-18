@@ -9,6 +9,5 @@ endif
 
 ifndef CONFIG_SPL_BUILD
 	obj-y += silabs.o mfg.o led.o
-	obj-y += fram.o
 	obj-y += parse_strap.o
 endif
