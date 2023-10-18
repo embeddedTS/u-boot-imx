@@ -55,9 +55,7 @@
 	"ramdisk_addr_r=" __stringify(RAMDISK_ADDR_R) "\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"clearbootcnt=mw.b 50004018 0;\0" \
 	"console=ttymxc0,115200\0" \
-	"altbootcmd=echo taking some recovery action\0" \
 	"chrg_pct=60\0" \
 	"chrg_verb=0\0" \
 	"silochargeon=silabs scaps disable;" \

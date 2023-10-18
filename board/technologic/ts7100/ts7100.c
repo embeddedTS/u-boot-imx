@@ -25,7 +25,6 @@
 #include <mmc.h>
 #include <netdev.h>
 #include <usb.h>
-#include "fram.h"
 #include "parse_strap.h"
 #include "tsfpga.h"
 
@@ -448,8 +447,6 @@ int board_late_init(void)
 
 	hw_watchdog_reset();
 
-	fram_init();
-
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 
 	/*
@@ -491,31 +488,6 @@ int board_late_init(void)
 
 	return 0;
 }
-
-#ifdef CONFIG_BOOTCOUNT_LIMIT
-void bootcount_store(ulong a)
-{
-	fram_write(2047, (uint8_t) a);
-	/* Takes 9us to write */
-	udelay(18);
-	if((uint8_t)a != fram_read(2047)) {
-		printf("New FRAM bootcount did not write!\n");
-	}
-}
-
-ulong bootcount_load(void)
-{
-	uint8_t val = fram_read(2047);
-
-	/* Depopulated FRAM returns all ffs */
-	if(val == 0xff) {
-		puts("FRAM returned unexpected value.  Returning bootcount 0\n");
-		return 0;
-	}
-
-	return val;
-}
-#endif //CONFIG_BOOTCOUNT_LIMIT
 
 int checkboard(void)
 {
