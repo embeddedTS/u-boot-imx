@@ -47,7 +47,6 @@
 	"initrd_high=0xffffffff\0" \
 	"autoload=no\0" \
 	"clearenv=env default -f -a && env save;\0" \
-	"emmc_dev=0\0" \
 	"loadaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"fdtaddr=" __stringify(FDT_ADDR_R) "\0" \
 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
