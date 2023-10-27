@@ -147,14 +147,21 @@ static struct mx6ul_iomux_ddr_regs mx6_ddr_ioregs = {
 	.dram_reset = 0x00000030,
 };
 
-static struct mx6_mmdc_calibration ts7250v3_512m_calibration = {
-	.p0_mpwldectrl0 = 0x00050000,
-	.p0_mpdgctrl0 = 0x01480144,
+static struct mx6_mmdc_calibration ts7100_512m_calibration = {
+	.p0_mpwldectrl0 = 0x00000000,
+	.p0_mpdgctrl0 = 0x014C0148,
 	.p0_mprddlctl = 0x40404E52,
-	.p0_mpwrdlctl = 0x4040504E,
+	.p0_mpwrdlctl = 0x4040524E,
 };
 
-struct mx6_ddr_sysinfo ts7250v3_sysinfo = {
+static struct mx6_mmdc_calibration ts7100_1g_calibration = {
+	.p0_mpwldectrl0 = 0x000B0003,
+	.p0_mpdgctrl0 = 0x015C015C,
+	.p0_mprddlctl = 0x40405052,
+	.p0_mpwrdlctl = 0x4040504C,
+};
+
+struct mx6_ddr_sysinfo ts7100_sysinfo = {
 	.dsize = 0, /* 16-bit bus */
 	.cs_density = 32, /* actually 512MB/1G */
 	.ncs = 1,
@@ -172,7 +179,7 @@ struct mx6_ddr_sysinfo ts7250v3_sysinfo = {
 	.refr = 3,
 };
 
-static struct mx6_ddr3_cfg ts7250v3_512m_ddr = {
+static struct mx6_ddr3_cfg ts7100_512m_ddr = {
 	.mem_speed = 800,
 	.density = 4,
 	.width = 16,
@@ -185,7 +192,7 @@ static struct mx6_ddr3_cfg ts7250v3_512m_ddr = {
 	.trasmin = 3500,
 };
 
-static struct mx6_ddr3_cfg ts7250v3_1g_ddr = {
+static struct mx6_ddr3_cfg ts7100_1g_ddr = {
 	.mem_speed = 800,
 	.density = 8,
 	.width = 16,
@@ -219,14 +226,14 @@ static void spl_dram_init(void)
 	mx6ul_dram_iocfg(16, &mx6_ddr_ioregs, &mx6_grp_ioregs);
 	if ((reg & 0x4) && ((reg & 0x2) == 0)) {
 		/* 4Gb Alliance AS4C256M16D3LB */
-		mx6_dram_cfg(&ts7250v3_sysinfo,
-			     &ts7250v3_512m_calibration,
-			     &ts7250v3_512m_ddr);
+		mx6_dram_cfg(&ts7100_sysinfo,
+			     &ts7100_512m_calibration,
+			     &ts7100_512m_ddr);
 	} else {
 		/* 8Gb Alliance AS4C512M16D3L-12BCN */
-		mx6_dram_cfg(&ts7250v3_sysinfo,
-			     &ts7250v3_512m_calibration,
-			     &ts7250v3_1g_ddr);
+		mx6_dram_cfg(&ts7100_sysinfo,
+			     &ts7100_1g_calibration,
+			     &ts7100_1g_ddr);
 	}
 }
 
