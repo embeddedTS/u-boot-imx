@@ -11,13 +11,14 @@
 #include <asm/arch/mx6-pins.h>
 #include <asm/arch/mx6ul_pins.h>
 #include <asm/arch/sys_proto.h>
+#include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <fsl_esdhc_imx.h>
 #include <linux/libfdt.h>
 
-#define FPGA_BASE 0x50000000
-#define FPGA_SYSCON (FPGA_BASE + 0x4000)
+#include <configs/ts7100.h>
+#include "tsfpga.h"
 
 #define EIM_PAD_CTRL (PAD_CTL_DSE_48ohm | PAD_CTL_SRE_FAST)
 
@@ -77,7 +78,7 @@ static void early_init(void)
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 }
 
-#define FPGA_RESET_GPIO	IMX_GPIO_NR(1, 13)
+#define FPGA_RESET_GPIO	IMX_GPIO_NR(4, 10)
 void board_setup_eim(void)
 {
 	struct weim *weim_regs = (struct weim *)WEIM_BASE_ADDR;
@@ -111,14 +112,27 @@ void board_setup_eim(void)
 
 	set_chipselect_size(CS0_128);
 
-	/* Wait for sane fpga, should take 62ms */
-	for (i = 0; i < 1000; i++) {
-		if ((readl(FPGA_SYSCON + 0x50) & 0x2) == 0)
+	gpio_request(FPGA_RESET_GPIO, "FPGA_RESET");
+	gpio_direction_input(FPGA_RESET_GPIO);
+
+	/*
+	 * The FPGA should currently take no more than 45 ms to become
+	 * sane; less if it drives low FPGA_RESET_GPIO (FPGA_IRQ2)
+	 * sooner than that. If it doesn't drive it low (i.e. on
+	 * broken hardware or pre-rev-23 FPGAs), we print a
+	 * "breadcrumb" for debugging. The limit derives from the 5 ms
+	 * (observed) plus 40 ms for the reset circuit, which is the
+	 * worst case if the observation was made at one extreme of
+	 * the circuit's +/- 20 ms and a future sample is at the other
+	 * extreme.
+	 */
+	for (i = 0; i < 45; i++) {
+		if (!gpio_get_value(FPGA_RESET_GPIO))
 			break;
 		mdelay(1);
 	}
-	if (i == 1000) {
-		puts("board_setup_eim: FPGA init took too long");
+	if (i == 45) {
+		printf("FPGA: %d ms elapsed without lowering FPGA_INT2 (possibly due to being pre-rev-22).\n", i);
 	}
 }
 
