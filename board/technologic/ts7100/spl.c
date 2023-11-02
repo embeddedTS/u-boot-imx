@@ -127,12 +127,10 @@ void board_setup_eim(void)
 	 * extreme.
 	 */
 	for (i = 0; i < 45; i++) {
-		if (!gpio_get_value(FPGA_RESET_GPIO))
-			break;
 		mdelay(1);
 	}
-	if (i == 45) {
-		printf("FPGA: %d ms elapsed without lowering FPGA_INT2 (possibly due to being pre-rev-22).\n", i);
+	if (gpio_get_value(FPGA_RESET_GPIO)) {
+		printf("FPGA: %d ms elapsed without lowering FPGA_INT2 (possibly due to being pre-rev-23).\n", i);
 	}
 }
 
