@@ -42,6 +42,8 @@
 #define RAMDISK_ADDR_R			0x90000000
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	"fdt_high=0xffffffff\0" \
+	"initrd_high=0xffffffff\0" \
 	"autoload=no\0" \
 	"netretry=once\0" \
 	"clearenv=mmc dev 0 1; mmc erase 800 2000; mmc erase C00 2000;\0" \
