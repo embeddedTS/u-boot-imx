@@ -13,6 +13,12 @@ config FPGA_ALTERA
 	  Enable Altera FPGA specific functions which includes bitstream
 	  (in BIT format), fpga and device validation.
 
+config FPGA_LATTICE
+	bool "Enable Lattice FPGA drivers"
+	select FPGA
+	help
+	  Say Y here to enable the Lattice FPGA driver
+
 config FPGA_SOCFPGA
 	bool "Enable Gen5 and Arria10 common FPGA drivers"
 	select FPGA_ALTERA
