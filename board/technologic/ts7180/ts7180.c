@@ -421,6 +421,9 @@ int board_late_init(void)
 	udelay(500);
 	fpga_gpio_output(EN_SD_POWER, 1);
 
+	env_set("board_name", "TS-7180");
+	env_set("board_rev", "D");
+
 	return 0;
 }
 
