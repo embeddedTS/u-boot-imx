@@ -150,32 +150,7 @@ int dram_init(void)
 
 void fpga_late_init(void)
 {
-#if defined(HAVE_TSFPGA)
-	int sdboot;
-	int uboot;
-
-	/* Onboard jumpers to boot to SD or break in u-boot */
-	gpio_request(SD_BOOT_JMPN, "SD_BOOT_JMP#");
-	gpio_request(U_BOOT_JMPN, "U_BOOT_JMP#");
-
-	sdboot = fpga_gpio_input(SD_BOOT_JMPN);
-	gpio_direction_input(U_BOOT_JMPN);
-	uboot = gpio_get_value(U_BOOT_JMPN);
-	if(sdboot)
-		env_set("jpsdboot", "off");
-	else
-		env_set("jpsdboot", "on");
-
-	if(uboot)
-		env_set("jpuboot", "off");
-	else
-		env_set("jpuboot", "on");
-
 	fpga_gpio_output(EN_USB_HOST_5V, 1);
-	gpio_free(SD_BOOT_JMPN);
-	gpio_free(U_BOOT_JMPN);
-
-#endif
 }
 
 static iomux_v3_cfg_t const uart1_pads[] = {
@@ -375,7 +350,6 @@ int board_late_init(void)
 	int jpsw_n;
 	uint8_t opts = 0;
 
-	gpio_request(SD_BOOT_JMPN, "SD_BOOT_JMP#");
 	gpio_request(PUSH_SW_CPUN, "PUSH_SW_CPU#");
 	gpio_request(U_BOOT_JMPN, "U_BOOT_JMP#");
 	gpio_request(NO_CHRG_JMPN, "NO_CHRG_JMP#");
@@ -383,7 +357,6 @@ int board_late_init(void)
 	gpio_request(OPT_ID_4, "ID4");
 	gpio_request(OPT_ID_5, "ID5");
 
-	gpio_direction_input(SD_BOOT_JMPN);
 	gpio_direction_input(PUSH_SW_CPUN);
 	gpio_direction_input(U_BOOT_JMPN);
 	gpio_direction_input(NO_CHRG_JMPN);
@@ -400,13 +373,15 @@ int board_late_init(void)
 	if (jpr) env_set("jpnochrg", "off");
 	else env_set("jpnochrg", "on");
 
-	jpr = gpio_get_value(SD_BOOT_JMPN);
-	if (jpr) env_set("jpsdboot", "off");
-	else env_set("jpsdboot", "on");
-
 	jpr = gpio_get_value(U_BOOT_JMPN);
 	if (!jpr) env_set("jpuboot", "on");
 	else env_set("jpuboot", "off");
+
+	jpr = fpga_gpio_input(SD_BOOT_JMPN);
+	if (jpr)
+		env_set("jpsdboot", "off");
+	else
+		env_set("jpsdboot", "on");
 
 	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
 	opts |= (gpio_get_value(OPT_ID_4) << 3); // R38
@@ -429,7 +404,6 @@ int board_late_init(void)
 		env_set("bootdelay", "-1");
 	}
 
-	gpio_free(SD_BOOT_JMPN);
 	gpio_free(PUSH_SW_CPUN);
 	gpio_free(U_BOOT_JMPN);
 	gpio_free(NO_CHRG_JMPN);
@@ -490,7 +464,6 @@ static void ts7180_fpga_done(void)
 
 static void ts7180_fpga_tdi(int value)
 {
-	printf("Here: %s, %s; %d\n", __FILE__, __FUNCTION__, __LINE__);
 	gpio_set_value(JTAG_FPGA_TDI, value);
 }
 
