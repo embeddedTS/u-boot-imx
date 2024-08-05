@@ -35,7 +35,10 @@
 	func(DHCP, dhcp, na)
 
 #define CONFIG_BOOTCOMMAND \
-	"run silochargeon; run silowaitcharge; run distro_bootcmd;"
+	"run silochargeon;"\
+	"run silowaitcharge;" \
+	"if test $jpsdboot = 'on'; then echo 'SD boot jumper is on'; run bootcmd_mmc0; fi;" \
+	"run distro_bootcmd;"
 
 #define FDT_ADDR_R			0x83000000
 #define RAMDISK_ADDR_R			0x90000000
