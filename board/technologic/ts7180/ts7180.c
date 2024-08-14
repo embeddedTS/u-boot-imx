@@ -16,6 +16,7 @@
 #include <asm/io.h>
 #include <common.h>
 #include <env.h>
+#include <fdt_support.h>
 #include <fpga.h>
 #include <fsl_esdhc_imx.h>
 #include <fuse.h>
@@ -511,6 +512,49 @@ void ts7180_fpga_init(void)
 }
 
 #endif
+
+static int fixup_ism330(void *blob, bd_t *bd)
+{
+	const char fdtpath[] = "/soc/bus@2100000/i2c@21a0000/gyro@6a";
+	const char *compatible = NULL;
+	struct udevice *chip;
+	struct udevice *bus;
+	uint8_t value;
+	int ret;
+
+	ret = uclass_get_device_by_seq(UCLASS_I2C, 0, &bus);
+	if (ret)
+		return 1;
+
+	ret = i2c_get_chip(bus, 0x6a, 1, &chip);
+	if (ret)
+		return 1;
+
+	/* WHOAMI register */
+	ret = dm_i2c_read(chip, 0x0f, &value, 1);
+	if (ret) {
+		printf("fixup_ism330: No IMU found\n");
+		return 1;
+	}
+	switch (value) {
+		case 0x6b:
+			compatible = "st,ism330dhcx";
+			break;
+		case 0x6a:
+			compatible = "st,ism330dlc";
+			break;
+		default:
+			printf("fixup_ism330: Unknown whoami (0x%X)\n", value);
+			return 1;
+	}
+	return fdt_find_and_setprop(blob, fdtpath, "compatible", compatible, strlen(compatible), 0);
+}
+
+int ft_board_setup(void *blob, bd_t *bd)
+{
+	fixup_ism330(blob, bd);
+	return 0;
+}
 
 #ifdef CONFIG_USB_EHCI_MX6
 #define USB_OTHERREGS_OFFSET	0x800
