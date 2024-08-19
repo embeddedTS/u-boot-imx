@@ -15,6 +15,7 @@
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/io.h>
 #include <common.h>
+#include <fdt_support.h>
 #include <fpga.h>
 #include <fsl_esdhc.h>
 #include <i2c.h>
