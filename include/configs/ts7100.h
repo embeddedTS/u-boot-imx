@@ -55,20 +55,7 @@
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"console=ttymxc0,115200\0" \
-	"chrg_pct=60\0" \
-	"chrg_verb=0\0" \
-	"silochargeon=silabs scaps disable;" \
-		"if test $silopresent = '1';" \
-			"then if test $jpnochrg = 'off';" \
-				"then silab scaps enable;"\
-			"fi;"\
-		"fi;\0" \
-	"silowaitcharge=if test $silopresent = '1';" \
-		"then if test $jpnochrg = 'on';" \
-			"then echo 'NO CHRG jumper is set, not waiting';" \
-			"else silabs scaps wait pct ${chrg_pct};" \
-		"fi;" \
-	"fi;\0" \
+	"silo_chrg_pct=0\0" \
 	"nfsboot-kernel=if nfs ${loadaddr} ${nfsip}:${nfsroot}/boot/zImage;" \
 			"setenv bootargs root=/dev/nfs ip=dhcp " \
 			  "nfsroot=${nfsip}:${nfsroot}${nfsroot_options} rootwait rw " \

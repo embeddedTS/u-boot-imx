@@ -9,7 +9,8 @@ ifdef CONFIG_SPL_BUILD
 endif
 
 ifndef CONFIG_SPL_BUILD
-	obj-y += silabs.o mfg.o
+	obj-y += mfg.o
+	obj-y += ../common/micro/micro.o
 endif
 
 obj-y += led.o
