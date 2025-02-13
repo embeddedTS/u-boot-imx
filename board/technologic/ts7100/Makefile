@@ -8,6 +8,6 @@ ifdef CONFIG_SPL_BUILD
 endif
 
 ifndef CONFIG_SPL_BUILD
-	obj-y += silabs.o mfg.o led.o
-	obj-y += parse_strap.o
+	obj-y += mfg.o led.o parse_strap.o
+	obj-y += ../common/micro/micro.o
 endif

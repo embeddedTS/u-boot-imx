@@ -32,11 +32,11 @@
 
 #include <configs/ts7180.h>
 #include "tsfpga.h"
+#include "../common/micro/micro.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
 void ts7180_fpga_init(void);
-int16_t silab_inb(uint16_t subadr);
 
 #define U_BOOT_JMPN		IMX_GPIO_NR(3, 16)
 #define PUSH_SW_CPUN		IMX_GPIO_NR(3, 18)
@@ -117,30 +117,6 @@ void hw_watchdog_init(void)
 	wdog_en = (u8)silab_cmd(2, checkflag);
 #endif
 }
-
-void hw_watchdog_reset(void)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const feed[] = {"silabs", "wdog", "feed"};
-	static ulong lastfeed;
-
-	if(wdog_en != 1) return;
-
-	if(get_timer(lastfeed) > 1000) {
-		silab_cmd(3, feed);
-		lastfeed = get_timer(0);
-	}
-#endif
-}
-
-//void reset_cpu(ulong addr)
-//{
-//#ifndef CONFIG_SPL_BUILD
-//	char * const rebootcmd[] = {"silabs", "wdog", "set", "1"};
-//	silab_cmd(4, rebootcmd);
-//#endif
-//	while (1) {}
-//}
 
 int dram_init(void)
 {
@@ -593,6 +569,7 @@ int board_ehci_hcd_init(int port)
 int checkboard(void)
 {
 	int fpgarev;
+	uint8_t micro_rev;
 
 	fpgarev = fpga_get_rev();
 	if(fpgarev < 0)
@@ -600,6 +577,10 @@ int checkboard(void)
 	else
 		printf("FPGA: Rev %d\n", fpgarev);
 
-	printf("Wizard: Rev %d\n", silab_inb(2048));
+	if (!micro_read8(MICRO_REVISION, &micro_rev))
+		printf("Wizard: Rev %d\n", micro_rev);
+	else
+		printf("Wizard: Not Responding\n");
+
 	return 0;
 }

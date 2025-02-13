@@ -35,8 +35,6 @@
 	func(DHCP, dhcp, na)
 
 #define CONFIG_BOOTCOMMAND \
-	"run silochargeon;"\
-	"run silowaitcharge;" \
 	"if test $jpsdboot = 'on'; then echo 'SD boot jumper is on'; run bootcmd_mmc0; fi;" \
 	"run distro_bootcmd;"
 
@@ -57,19 +55,7 @@
 	"fdtfile=imx6ul-ts7180.dtb\0" \
 	"console=ttymxc0,115200\0" \
 	"ethact=ethernet@2188000\0" \
-	"chrg_pct=60\0" \
-	"silochargeon=silabs scaps disable;" \
-		"if test $silopresent = '1';" \
-			"then if test $jpnochrg = 'off';" \
-				"then silabs scaps enable;"\
-			"fi;"\
-		"fi;\0" \
-	"silowaitcharge=if test $silopresent = '1';" \
-		"then if test $jpnochrg = 'on';" \
-			"then echo 'NO CHRG jumper is set, not waiting';" \
-			"else silabs scaps wait pct ${chrg_pct};" \
-		"fi;" \
-	"fi;\0" \
+	"silo_chrg_pct=0\0" \
 	"nfsroot=192.168.0.36:/mnt/storage/imx6ul\0" \
 	"nfsboot=echo Booting from NFS ...;" \
 		"dhcp;" \

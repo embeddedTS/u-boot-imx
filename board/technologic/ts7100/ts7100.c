@@ -28,6 +28,7 @@
 #include <usb.h>
 #include "parse_strap.h"
 #include "tsfpga.h"
+#include "../common/micro/micro.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -107,39 +108,6 @@ extern int64_t silab_cmd(int argc, char *const argv[]);
 #if defined(HAVE_SILAB_REV)
 extern int64_t silab_rev(void);
 #endif
-
-int wdog_en = 0;
-void hw_watchdog_init(void)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const checkflag[] = {"silabs", "wdog"};
-	wdog_en = 1;
-	wdog_en = (u8)silab_cmd(2, checkflag);
-#endif
-}
-
-void hw_watchdog_reset(void)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const feed[] = {"silabs", "wdog", "feed"};
-	static ulong lastfeed;
-
-	if(wdog_en != 1) return;
-
-	if(get_timer(lastfeed) > 1000) {
-		silab_cmd(3, feed);
-		lastfeed = get_timer(0);
-	}
-#endif
-}
-
-void reset_cpu(ulong addr)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const rebootcmd[] = {"silabs", "wdog", "set", "1"};
-	silab_cmd(4, rebootcmd);
-#endif
-}
 
 int dram_init(void)
 {
@@ -437,6 +405,7 @@ int board_init(void)
 
 int board_late_init(void)
 {
+	uint8_t micro_rev;
 	char fdtfile[64] = {0};
 	char rev_as_str[2] = {0};
 	uint32_t cpu_opts;
@@ -445,8 +414,6 @@ int board_late_init(void)
 	uint32_t io_opts;
 	uint32_t cpu_straps;
 	uint32_t fpga_straps;
-
-	hw_watchdog_reset();
 
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
 
@@ -486,6 +453,11 @@ int board_late_init(void)
 		env_set("bootcmd", "mfg");
 		env_set("bootdelay", "1");
 	}
+
+	if (!micro_read8(MICRO_REVISION, &micro_rev))
+		printf("Wizard: Rev %d\n", micro_rev);
+	else
+		printf("Wizard: Not Responding\n");
 
 	return 0;
 }
