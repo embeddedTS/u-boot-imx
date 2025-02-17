@@ -412,40 +412,21 @@ int board_late_init(void)
 	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t io_model;
 	uint32_t io_opts;
-	uint32_t cpu_straps;
-	uint32_t fpga_straps;
 
 	imx_iomux_v3_setup_multiple_pads(misc_pads, ARRAY_SIZE(misc_pads));
-
-	/*
-	 * WARNING: All of these are wiped out of the environment
-	 * after an "env default -a", until the board is reset.
-	 */
-	env_set("model", get_board_model());
-
-	fpga_straps = read_raw_fpga_straps();
-	env_set_hex("raw_fpga_straps", fpga_straps);
-
-	cpu_straps = read_raw_cpu_straps();
-	env_set_hex("raw_cpu_straps", cpu_straps);
-
-	cpu_opts = read_cpu_board_opts();
+	board_read_straps(&cpu_opts, &io_opts, &io_model);
+	env_set("model", "7100");
 	env_set_hex("opts", cpu_opts);
-
-	io_model = read_io_board_model();
+	env_set_hex("io_opts", io_opts);
 	env_set_hex("io_model", io_model);
 
 	snprintf(fdtfile, sizeof(fdtfile),
-		 "imx6ul-ts%s-%d.dtb", get_board_model(), io_model);
+		 "imx6ul-ts7100-%d.dtb", io_model);
 	env_set("fdtfile", fdtfile);
-
-	io_opts = read_io_board_opts();
-	env_set_hex("io_opts", io_opts);
 
 	env_set("board_name", get_board_name());
 	rev_as_str[0] = get_cpu_board_version_char();
 	env_set("board_rev", rev_as_str);
-	env_set("board_rev_straps", get_cpu_board_version_str());
 
 	env_set_hex("fpga_rev", fpga_rev & 0x7fffffff);
 
@@ -462,7 +443,7 @@ int board_late_init(void)
 	return 0;
 }
 
-static int fixup_ism330(void *blob, bd_t *bd)
+static int fixup_ism330(void *blob)
 {
 	const char fdtpath[] = "/soc/bus@2100000/i2c@21a0000/gyro@6a";
 	const char *compatible = NULL;
@@ -499,9 +480,58 @@ static int fixup_ism330(void *blob, bd_t *bd)
 	return fdt_find_and_setprop(blob, fdtpath, "compatible", compatible, strlen(compatible), 0);
 }
 
+int fdt_update_straps(void *fdt)
+{
+	uint32_t cpu_opts;
+	uint32_t io_model;
+	uint32_t io_opts;
+	char pcb_revision[2] = {0};
+	int chosen_node;
+	int ret;
+
+	board_read_straps(&cpu_opts, &io_opts, &io_model);
+	cpu_opts = cpu_to_fdt32(cpu_opts);
+	io_opts = cpu_to_fdt32(io_opts);
+	io_model = cpu_to_fdt32(io_model);
+	pcb_revision[0] = get_cpu_board_version_char();
+
+	chosen_node = fdt_path_offset(fdt, "/chosen");
+	if (chosen_node < 0) {
+		printf("Failed to find /chosen node: %d\n", chosen_node);
+		return -1;
+	}
+
+	ret = fdt_setprop(fdt, chosen_node, "cpu-options", &cpu_opts, sizeof(cpu_opts));
+	if (ret < 0) {
+		printf("Failed to set property cpu-straps: %d\n", ret);
+		return -1;
+	}
+	ret = fdt_setprop(fdt, chosen_node, "io-model", &io_model, sizeof(io_model));
+	if (ret < 0) {
+		printf("Failed to set property cpu-straps: %d\n", ret);
+		return -1;
+	}
+	ret = fdt_setprop(fdt, chosen_node, "io-options", &io_opts, sizeof(io_opts));
+	if (ret < 0) {
+		printf("Failed to set property cpu-straps: %d\n", ret);
+		return -1;
+	}
+	ret = fdt_setprop_string(fdt, chosen_node, "pcb-revision", pcb_revision);
+	if (ret < 0) {
+		printf("Failed to set property pcb-revision: %d\n", ret);
+		return -1;
+	}
+
+	return 0;
+}
+
 int ft_board_setup(void *blob, bd_t *bd)
 {
-	fixup_ism330(blob, bd);
+	int ret = 0;
+
+	ret |= fixup_ism330(blob);
+	ret |= fdt_update_straps(blob);
+
 	return 0;
 }
 
@@ -510,7 +540,6 @@ int checkboard(void)
 	uint32_t fpga_rev = readl(FPGA_REV);
 	uint32_t fpga_hash = readl(FPGA_HASH);
 
-	/* TS-7100 variant info goes here */
 	printf("FPGA: Rev %d ", fpga_rev & 0x7fffffff);
 	if (fpga_rev & (1 << 31))
 		printf("(%x-dirty)\n", fpga_hash);
