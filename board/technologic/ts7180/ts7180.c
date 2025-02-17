@@ -321,25 +321,46 @@ int board_init(void)
 	return 0;
 }
 
+static uint32_t board_read_straps(void)
+{
+	uint8_t opts = 0;
+
+	gpio_request(OPT_ID_1, "ID1");
+	gpio_request(OPT_ID_4, "ID4");
+	gpio_request(OPT_ID_5, "ID5");
+	gpio_direction_input(OPT_ID_1);
+	gpio_direction_input(OPT_ID_4);
+	gpio_direction_input(OPT_ID_5);
+
+	opts |= (gpio_get_value(OPT_ID_1) << 0); // R31
+	opts |= (fpga_gpio_input(47) >> 1); // R36
+	opts |= (fpga_gpio_input(48) >> 2); // R37
+	opts |= (gpio_get_value(OPT_ID_4) << 3); // R38
+	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
+
+	gpio_free(OPT_ID_1);
+	gpio_free(OPT_ID_4);
+	gpio_free(OPT_ID_5);
+
+	/* Invert so 1 = populated */
+	opts = (~opts & 0x1F);
+
+	return opts;
+}
+
 int board_late_init(void)
 {
 	int jpr;
 	int jpsw_n;
-	uint8_t opts = 0;
+	uint32_t opts = board_read_straps();
 
 	gpio_request(PUSH_SW_CPUN, "PUSH_SW_CPU#");
 	gpio_request(U_BOOT_JMPN, "U_BOOT_JMP#");
 	gpio_request(NO_CHRG_JMPN, "NO_CHRG_JMP#");
-	gpio_request(OPT_ID_1, "ID1");
-	gpio_request(OPT_ID_4, "ID4");
-	gpio_request(OPT_ID_5, "ID5");
 
 	gpio_direction_input(PUSH_SW_CPUN);
 	gpio_direction_input(U_BOOT_JMPN);
 	gpio_direction_input(NO_CHRG_JMPN);
-	gpio_direction_input(OPT_ID_1);
-	gpio_direction_input(OPT_ID_4);
-	gpio_direction_input(OPT_ID_5);
 
 	jpsw_n = gpio_get_value(PUSH_SW_CPUN);
 	if (!jpsw_n) env_set("jpsw", "on");
@@ -360,18 +381,7 @@ int board_late_init(void)
 	else
 		env_set("jpsdboot", "on");
 
-	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
-	opts |= (gpio_get_value(OPT_ID_4) << 3); // R38
-
-	if (fpga_gpio_input(48)) /* FPGA pad P7, R37 on TS-7180 schematic) */
-		opts |= (1 << 2);
-
-	if (fpga_gpio_input(47)) /* FPGA pad N7, R36 on TS-7180 schematic) */
-		opts |= (1 << 1);
-
-	opts |= (gpio_get_value(OPT_ID_1) << 0); // R31
-
-	env_set_hex("opts", (~opts & 0x1F));
+	env_set_hex("opts", opts);
 
 	if (is_mfg()) {
 		env_set("bootcmd", "mfg");
@@ -384,9 +394,6 @@ int board_late_init(void)
 	gpio_free(PUSH_SW_CPUN);
 	gpio_free(U_BOOT_JMPN);
 	gpio_free(NO_CHRG_JMPN);
-	gpio_free(OPT_ID_1);
-	gpio_free(OPT_ID_4);
-	gpio_free(OPT_ID_5);
 
 	fpga_late_init();
 	red_led_on();
@@ -489,7 +496,7 @@ void ts7180_fpga_init(void)
 
 #endif
 
-static int fixup_ism330(void *blob, bd_t *bd)
+static int fixup_ism330(void *blob)
 {
 	const char fdtpath[] = "/soc/bus@2100000/i2c@21a0000/gyro@6a";
 	const char *compatible = NULL;
@@ -526,10 +533,35 @@ static int fixup_ism330(void *blob, bd_t *bd)
 	return fdt_find_and_setprop(blob, fdtpath, "compatible", compatible, strlen(compatible), 0);
 }
 
+int fdt_update_straps(void *fdt)
+{
+	u32 val = cpu_to_fdt32(board_read_straps());
+	int chosen_node;
+	int ret;
+
+	chosen_node = fdt_path_offset(fdt, "/chosen");
+	if (chosen_node < 0) {
+		printf("Failed to find /chosen node: %d\n", chosen_node);
+		return -1;
+	}
+
+	ret = fdt_setprop(fdt, chosen_node, "resistor-straps", &val, sizeof(val));
+	if (ret < 0) {
+		printf("Failed to set property resistor-straps: %d\n", ret);
+		return -1;
+	}
+
+	return 0;
+}
+
 int ft_board_setup(void *blob, bd_t *bd)
 {
-	fixup_ism330(blob, bd);
-	return 0;
+	int ret = 0;
+
+	ret |= fdt_update_straps(blob);
+	ret |= fixup_ism330(blob);
+
+	return ret;
 }
 
 #ifdef CONFIG_USB_EHCI_MX6
