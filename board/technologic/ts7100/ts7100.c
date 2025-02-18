@@ -464,7 +464,7 @@ static int fixup_ism330(void *blob)
 	ret = dm_i2c_read(chip, 0x0f, &value, 1);
 	if (ret) {
 		printf("fixup_ism330: No IMU found\n");
-		return 1;
+		return 0;
 	}
 	switch (value) {
 		case 0x6b:
