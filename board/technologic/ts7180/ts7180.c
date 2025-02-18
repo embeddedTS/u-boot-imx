@@ -333,8 +333,8 @@ static uint32_t board_read_straps(void)
 	gpio_direction_input(OPT_ID_5);
 
 	opts |= (gpio_get_value(OPT_ID_1) << 0); // R31
-	opts |= (fpga_gpio_input(47) >> 1); // R36
-	opts |= (fpga_gpio_input(48) >> 2); // R37
+	opts |= (fpga_gpio_input(47) << 1); // R36
+	opts |= (fpga_gpio_input(48) << 2); // R37
 	opts |= (gpio_get_value(OPT_ID_4) << 3); // R38
 	opts |= (gpio_get_value(OPT_ID_5) << 4); // R30 (extra CPU strap)
 
