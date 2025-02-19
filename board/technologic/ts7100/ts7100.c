@@ -154,6 +154,17 @@ static iomux_v3_cfg_t const eim_pins[] = {
 };
 #endif
 
+static iomux_v3_cfg_t const fpga_jtag_pads[] = {
+	/* JTAG_FPGA_TDI */
+	MX6_PAD_CSI_MCLK__GPIO4_IO17 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
+	/* JTAG_FPGA_TDO */
+	MX6_PAD_NAND_RE_B__GPIO4_IO00 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
+	/* JTAG_FPGA_TMS */
+	MX6_PAD_LCD_DATA01__GPIO3_IO06 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
+	/* JTAT_FPGA_TCK */
+	MX6_PAD_LCD_DATA00__GPIO3_IO05 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
+};
+
 static iomux_v3_cfg_t const misc_pads[] = {
 	/* POWER_FAIL_3V */
 	MX6_PAD_SNVS_TAMPER0__GPIO5_IO00 | MUX_PAD_CTRL(MISC_PAD_CTRL),
@@ -166,15 +177,6 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_SNVS_TAMPER8__GPIO5_IO08 | MUX_PAD_CTRL(MISC_PAD_CTRL),
 	/* FPGA_4 */
 	MX6_PAD_SNVS_TAMPER9__GPIO5_IO09 | MUX_PAD_CTRL(MISC_PAD_CTRL),
-
-	/* JTAG_FPGA_TDI */
-	MX6_PAD_CSI_MCLK__GPIO4_IO17 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
-	/* JTAG_FPGA_TDO */
-	MX6_PAD_NAND_RE_B__GPIO4_IO00 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
-	/* JTAG_FPGA_TMS */
-	MX6_PAD_LCD_DATA01__GPIO3_IO06 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
-	/* JTAT_FPGA_TCK */
-	MX6_PAD_LCD_DATA00__GPIO3_IO05 | MUX_PAD_CTRL(MISC_PAD_PU_CTRL),
 };
 
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
@@ -246,6 +248,82 @@ static iomux_v3_cfg_t const fec_enet_pads1[] = {
 	/* Isolate */
 	MX6_PAD_ENET2_RX_ER__GPIO2_IO15 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 };
+
+
+#if defined(CONFIG_FPGA)
+
+static void ts7100_fpga_jtag_init(void)
+{
+	gpio_request(JTAG_FPGA_TDI, "FPGA_TDI");
+	gpio_request(JTAG_FPGA_TCK, "FPGA_TCK");
+	gpio_request(JTAG_FPGA_TMS, "FPGA_TMS");
+	gpio_request(JTAG_FPGA_TDO, "FPGA_TDO");
+
+	gpio_direction_output(JTAG_FPGA_TDI, 1);
+	gpio_direction_output(JTAG_FPGA_TCK, 1);
+	gpio_direction_output(JTAG_FPGA_TMS, 1);
+	gpio_direction_input(JTAG_FPGA_TDO);
+}
+
+static void ts7100_fpga_done(void)
+{
+	gpio_direction_input(JTAG_FPGA_TDI);
+	gpio_direction_input(JTAG_FPGA_TCK);
+	gpio_direction_input(JTAG_FPGA_TMS);
+	gpio_direction_input(JTAG_FPGA_TDO);
+
+	gpio_free(JTAG_FPGA_TDI);
+	gpio_free(JTAG_FPGA_TCK);
+	gpio_free(JTAG_FPGA_TMS);
+	gpio_free(JTAG_FPGA_TDO);
+}
+
+static void ts7100_fpga_tdi(int value)
+{
+	gpio_set_value(JTAG_FPGA_TDI, value);
+}
+
+static void ts7100_fpga_tms(int value)
+{
+	gpio_set_value(JTAG_FPGA_TMS, value);
+}
+
+static void ts7100_fpga_tck(int value)
+{
+	gpio_set_value(JTAG_FPGA_TCK, value);
+}
+
+static int ts7100_fpga_tdo(void)
+{
+	return gpio_get_value(JTAG_FPGA_TDO);
+}
+
+lattice_board_specific_func ts7100_fpga_fns = {
+	ts7100_fpga_jtag_init,
+	ts7100_fpga_tdi,
+	ts7100_fpga_tms,
+	ts7100_fpga_tck,
+	ts7100_fpga_tdo,
+	ts7100_fpga_done
+};
+
+Lattice_desc ts7100_fpga = {
+	Lattice_XP2,
+	lattice_jtag_mode,
+	589012,
+	(void *) &ts7100_fpga_fns,
+	NULL,
+	0,
+	"machxo_2_cb132"
+};
+
+void ts7100_fpga_init(void)
+{
+	fpga_init();
+	fpga_add(fpga_lattice, &ts7100_fpga);
+}
+
+#endif
 
 int board_phy_config(struct phy_device *phydev)
 {
@@ -387,6 +465,15 @@ int board_early_init_f(void)
 	setup_iomux_uart();
 #endif
 
+	imx_iomux_v3_setup_multiple_pads(fpga_jtag_pads,
+		ARRAY_SIZE(fpga_jtag_pads));
+
+	/* Keep as inputs to allow offboard programming */
+	gpio_direction_input(JTAG_FPGA_TDI);
+	gpio_direction_input(JTAG_FPGA_TCK);
+	gpio_direction_input(JTAG_FPGA_TMS);
+	gpio_direction_input(JTAG_FPGA_TDO);
+
 	return 0;
 }
 #endif  /* CONFIG_BOARD_EARLY_INIT_F */
@@ -400,6 +487,10 @@ int board_init(void)
 	setup_fec();
 #endif
 
+#if defined(CONFIG_FPGA)
+	/* Set up FPGA subsystem for JTAGing, i.e., soft loading */
+	ts7100_fpga_init();
+#endif
 	return 0;
 }
 
