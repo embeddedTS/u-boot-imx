@@ -78,15 +78,18 @@
 #define CONFIG_SYS_I2C_SPEED		100000
 
 #undef CONFIG_BOOTDELAY
-#define CONFIG_BOOTDELAY               0
-#define CONFIG_AUTOBOOT_KEYED          1
+#define CONFIG_BOOTDELAY	       0
+#define CONFIG_AUTOBOOT_KEYED 1
+#define CONFIG_AUTOBOOT_PROMPT "Press Ctrl+C to abort autoboot in %d second(s)\n", bootdelay
+#define CTRL(c) ((c)&0x1F)
+#define CONFIG_AUTOBOOT_STOP_STR  (char []){CTRL('C'), 0}
 
 #define CONFIG_PREBOOT \
 	"run silochargeon;"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-        "chrg_pct=0\0" \
-        "chrg_verb=0\0" \
+	"chrg_pct=0\0" \
+	"chrg_verb=0\0" \
 	"rstuboot=1\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -204,13 +207,12 @@
 	"emmc-ums=gpio set 71; ums 0 mmc 1;\0" \
 
 #define CONFIG_BOOTCOMMAND \
-	"if test \"${jpuboot}\" = \"on\"; then " \
+	"if test ${jpuboot} = 'on'; then " \
 		"run usbprod;" \
-	"else;"\
-		"if test ${jpsdboot} = 'on';" \
-			"then run sdboot;" \
-			"else run emmcboot;" \
-		"fi;" \
+	"elif test ${jpsdboot} = 'on'; then " \
+		"run sdboot;" \
+	"else " \
+		"run emmcboot;" \
 	"fi;"
 
 #define CONFIG_CMD_MEMTEST
