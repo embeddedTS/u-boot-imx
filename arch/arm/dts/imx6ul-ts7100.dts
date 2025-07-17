@@ -728,6 +728,13 @@
 			MX6UL_PAD_SNVS_TAMPER3__GPIO5_IO03	0x1b0a0
 		>;
 	};
+
+	pinctrl_wdog: wdoggrp {
+		fsl,pins = <
+			MX6UL_PAD_LCD_RESET__WDOG1_WDOG_ANY    0x30b0
+		>;
+	};
+
 	pinctrl_weim_cs0: weimcs0grp {
 		fsl,pins = <
 			MX6UL_PAD_CSI_MCLK__GPIO4_IO17		0xb029 /* EIM_CS0# */
@@ -782,4 +789,11 @@
 	disable-over-current;
 	vbus-supply = <&reg_3v3>;
 	status = "okay";
+};
+
+&wdog1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_wdog>;
+	status = "okay";
+	fsl,ext-reset-output;
 };
