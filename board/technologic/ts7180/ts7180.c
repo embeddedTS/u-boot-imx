@@ -108,16 +108,6 @@ int is_mfg(void)
 extern int64_t silab_cmd(int argc, char *const argv[]);
 extern int64_t silab_rev(void);
 
-int wdog_en = 0;
-void hw_watchdog_init(void)
-{
-#ifndef CONFIG_SPL_BUILD
-	char * const checkflag[] = {"silabs", "wdog"};
-	wdog_en = 1;
-	wdog_en = (u8)silab_cmd(2, checkflag);
-#endif
-}
-
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
