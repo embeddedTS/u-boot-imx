@@ -228,6 +228,10 @@ int usbhub_test(void)
 	int i;
 	struct usb_device *dev = NULL;
 
+	gpio_direction_output(IMX_GPIO_NR(2, 11), 0); // hub only needs 1us
+	udelay(1);
+	gpio_set_value(IMX_GPIO_NR(2, 11), 1);
+
 	do_usb_start();
 
 	for (i = 0; i < USB_MAX_DEVICE; i++) {
