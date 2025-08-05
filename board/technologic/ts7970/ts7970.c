@@ -59,6 +59,7 @@
 #define TS7970_REVD		IMX_GPIO_NR(7, 0)
 #define TS7970_REVG		IMX_GPIO_NR(1, 29)
 #define TS7970_REVH		IMX_GPIO_NR(2, 3)
+#define TS7970_REVJ		IMX_GPIO_NR(2, 1)
 #define TS7970_WIFI_EN		IMX_GPIO_NR(1, 26)
 #define TS7970_BT_EN		IMX_GPIO_NR(1, 27)
 #define TS7970_SD1_D0		IMX_GPIO_NR(1, 16)
@@ -87,6 +88,8 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_HYS |   \
 	PAD_CTL_ODE | PAD_CTL_SRE_FAST)
 
+#define STRAP_PAD_CTRL (PAD_CTL_PUS_100K_UP)
+
 iomux_v3_cfg_t const ecspi1_pads[] = {
 	MX6_PAD_EIM_D19__GPIO3_IO19 | MUX_PAD_CTRL(SPI_PAD_CTRL),
 	MX6_PAD_EIM_D17__ECSPI1_MISO | MUX_PAD_CTRL(SPI_PAD_CTRL),
@@ -105,7 +108,8 @@ iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_CSI0_DATA_EN__GPIO5_IO20 | MUX_PAD_CTRL(NO_PAD_CTRL),	 // FPGA_RESET
 	MX6_PAD_SD3_DAT4__GPIO7_IO01 | MUX_PAD_CTRL(UART_PAD_CTRL),	 // REV B strap
 	MX6_PAD_SD3_DAT5__GPIO7_IO00 | MUX_PAD_CTRL(UART_PAD_CTRL),	 // REV C strap
-	MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL), 	 // Rev G strap
+	MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(STRAP_PAD_CTRL), 	 // Rev G strap
+	MX6_PAD_NANDF_D1__GPIO2_IO01 | MUX_PAD_CTRL(STRAP_PAD_CTRL), 	 // Rev J strap
 };
 
 /* WIFI */
@@ -297,8 +301,11 @@ char board_rev(void)
 		gpio_direction_input(TS7970_REVD);
 		gpio_direction_input(TS7970_REVG);
 		gpio_direction_input(TS7970_REVH);
+		gpio_direction_input(TS7970_REVJ);
 
-		if(!gpio_get_value(TS7970_REVH)) {
+		if (!gpio_get_value(TS7970_REVJ)) {
+			rev = 'J';
+		} else if (!gpio_get_value(TS7970_REVH)) {
 			rev = 'H';
 		} else if(!gpio_get_value(TS7970_REVG)) {
 			rev = 'G';
@@ -425,11 +432,21 @@ int board_mmc_init(bd_t *bis)
 
 int board_phy_config(struct phy_device *phydev)
 {
-	if(board_rev() == 'A' || board_rev() == 'B') {
+	uint16_t value;
+
+	switch (board_rev()) {
+	case 'A':
+	case 'B':
+		/* Micrel KSZ9031 */
 		ksz9031_phy_extended_write(phydev, 0x2, 0x8, 0x8000, 0x3EF);
 		ksz9031_phy_extended_write(phydev, 0x0, 0x3, 0x8000, 0x1A80);
 		ksz9031_phy_extended_write(phydev, 0x0, 0x4, 0x8000, 0x0006);
-	} else {
+		break;
+	case 'D':
+	case 'F':
+	case 'G':
+	case 'H':
+		/* Marvell 88E1512 */
 		/* reg page 0 */
 		phy_write(phydev, MDIO_DEVAD_NONE, 22, 0x0000);
 		/* Enable downshift after 1 try */
@@ -440,6 +457,20 @@ int board_phy_config(struct phy_device *phydev)
 		phy_write(phydev, MDIO_DEVAD_NONE, 16, 0x1017);
 		/* reset to reg page 0 */
 		phy_write(phydev, MDIO_DEVAD_NONE, 22, 0x0000);
+		break;
+	case 'J':
+	default:
+		/* Broadcom BCM54213 */
+		/* LED1 = 0x0, LINKSPD[1]
+		 * LED2 = 0x3, ACTIVITYLED
+		 */
+		value = (1 << 15) | (0xd << 10) | (0x3 << 4);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1c, value);
+		/* Enable "traffic mode" for ACTIVITYLED. Without this,
+		 * the LED blinks at a constant rate rather than with
+		 * traffic.
+		 */
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x10, 0x20);
 	}
 
 	if (phydev->drv->config)

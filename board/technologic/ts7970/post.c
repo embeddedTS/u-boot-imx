@@ -43,6 +43,7 @@ int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 int do_mem_mtest(cmd_tbl_t *cmdtp, int flag, int argc,
 			char * const argv[]);
 void do_usb_start(void);
+extern char board_rev(void);
 
 int fpga_test(void)
 {
@@ -122,6 +123,33 @@ int micrel_phy_test(void)
 
 	if(model != 0x22) {
 		printf("Wrong PHY?  Bad model 0x%X not 0x22\n", oui);
+		ret |= 1;
+	}
+
+	if (ret == 0) printf("PHY test passed\n");
+	else printf("PHY test failed\n");
+	return ret;
+}
+
+int broadcom_phy_test(void)
+{
+	int ret = 0;
+	unsigned int oui;
+	unsigned char model;
+	unsigned char rev;
+
+	if (miiphy_info ("FEC", 0x1, &oui, &model, &rev) != 0) {
+		printf("Failed to find PHY\n");
+		return 1;
+	}
+
+	if(oui != 0x180361) {
+		printf("Wrong PHY?  Bad OUI 0x%X 0x180361\n", oui);
+		ret |= 1;
+	}
+
+	if(model != 0x0A) {
+		printf("Wrong PHY?  Bad model 0x%X not 0x0A\n", oui);
 		ret |= 1;
 	}
 
@@ -385,6 +413,22 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	opt_r39 = ((~val) & 0x8) >> 3;
 	build_variant = (opt_r39 << 3) | (opt_r37 << 2) | (opt_r36 << 1) | (opt_r34);
 
+	switch (board_rev()) {
+		case 'A':
+		case 'B':
+			ret |= micrel_phy_test();
+			break;
+		case 'D':
+		case 'F':
+		case 'G':
+		case 'H':
+			ret |= marvell_phy_test();
+			break;
+		case 'J':
+			ret |= broadcom_phy_test();
+			break;
+	}
+
 	switch (build_variant) {
 		case 1:
 			printf("Build variant %d, TS-7970-1G-4GF-S8S-RTC-I\n", build_variant);
@@ -402,7 +446,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 			ret |= usbhub_test();
-			ret |= marvell_phy_test();
 
 			break;
 		case 2: 
@@ -421,7 +464,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 			ret |= usbhub_test();
-			ret |= marvell_phy_test();
 
 			break;
 		case 3: /* */
@@ -441,7 +483,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 			}
 
 			ret |= usbhub_test();
-			ret |= marvell_phy_test();
 
 			break;
 		case 4:
@@ -461,7 +502,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 			}
 
 			ret |= usbhub_test();
-			ret |= marvell_phy_test();
 			break;
 		case 13:
 			printf("Build variant %d, CUSTOM3\n", build_variant);
@@ -479,7 +519,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 
-			ret |= marvell_phy_test();
 			break;
 		case 14:
 			printf("Build variant %d, CUSTOM2\n", build_variant);
@@ -497,7 +536,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 
-			ret |= marvell_phy_test();
 			break;
 		case 15: /* Custom board or failure */
 			/* Some custom board was made before straps worked.  This checks
@@ -519,7 +557,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 					ret = 1;
 					printf("Build variant should not be a quad.\n");
 				}
-				ret |= micrel_phy_test();
 				break;
 			}
 		default:
