@@ -1,0 +1,12 @@
+if TARGET_IMX95_TS11000
+
+config SYS_BOARD
+	default "ts11000"
+
+config SYS_VENDOR
+	default "technologic"
+
+config SYS_CONFIG_NAME
+	default "ts11000"
+
+endif

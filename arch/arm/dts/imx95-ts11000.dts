@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright 2024 NXP
+ */
+
+#include "../dts/upstream/src/arm64/freescale/imx95-ts11000.dts"
+#include "imx95-ts11000-u-boot.dtsi"
+
