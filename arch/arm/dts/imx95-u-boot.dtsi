@@ -791,7 +791,7 @@
 			power-domains = <&scmi_devpd IMX95_PD_NETC>;
 
 			netc_emdio: mdio@0,0 {
-				compatible = "fsl,enetc4-mdio";
+				compatible = "pci1131,ee00";
 				reg = <0x010000 0 0 0 0>;
 				#address-cells = <1>;
 				#size-cells = <0>;
