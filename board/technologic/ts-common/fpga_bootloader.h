@@ -85,5 +85,6 @@ int flash_update_bootloader(u32 addr, u32 len);
 int flash_read_bootloader(u32 addr, u32 len);
 int fpga_update_from_flash(void);
 int fpga_reconfig(void);
+void print_fpga_version(void);
 
 #endif
