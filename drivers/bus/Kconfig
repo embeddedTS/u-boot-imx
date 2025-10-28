@@ -5,6 +5,18 @@
 
 menu "Bus devices"
 
+config NXP_FSPI_BUS
+	bool "NXP FlexSPI as a memory-mapped bus"
+	depends on DM && ARCH_IMX9
+	help
+	  Enable support for the NXP FlexSPI controller as a generic
+	  memory-mapped bus.
+
+	  This driver configures the FlexSPI peripheral in its AHB bus
+	  mode, allowing it to be used as a parallel bus for accessing
+	  memory-mapped peripherals (like an FPGA) instead of as an
+	  SPI MTD (flash) controller.
+
 config TI_PWMSS
 	bool
 	default y if ARCH_OMAP2PLUS && PWM_TI_EHRPWM
