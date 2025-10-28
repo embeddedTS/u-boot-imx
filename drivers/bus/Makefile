@@ -9,3 +9,4 @@ obj-$(CONFIG_UNIPHIER_SYSTEM_BUS) += uniphier-system-bus.o
 endif
 
 obj-$(CONFIG_$(XPL_)TI_SYSC)	+= ti-sysc.o
+obj-$(CONFIG_NXP_FSPI_BUS)	+= nxp-fspi-bus.o
