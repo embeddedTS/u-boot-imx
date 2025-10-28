@@ -1,0 +1,6 @@
+embeddedTS i.MX93 Product Family (TS-9370)
+M:	Lionel D. Hummel <lionel@TechnologicSystems.com>
+S:	Maintained
+F:	board/freescale/ts9370/
+F:	include/configs/ts9370.h
+F:	configs/ts9370_defconfig

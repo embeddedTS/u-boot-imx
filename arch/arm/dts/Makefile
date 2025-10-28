@@ -975,6 +975,8 @@ dtb-$(CONFIG_ARCH_IMX9) += \
 	imx93-phyboard-segin.dtb \
 	imx93-11x11-frdm.dtb
 
+dtb-$(CONFIG_TARGET_IMX93_TS9370) += imx93-ts9370.dtb
+
 dtb-$(CONFIG_ARCH_IMXRT) += imxrt1050-evk.dtb \
 	imxrt1020-evk.dtb \
 	imxrt1170-evk.dtb \

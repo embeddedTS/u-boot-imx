@@ -1,0 +1,15 @@
+if TARGET_IMX93_TS9370
+
+config SYS_BOARD
+	default "ts9370"
+
+config SYS_VENDOR
+	default "technologic"
+
+config SYS_CONFIG_NAME
+	default "ts9370"
+
+config DDR_MEM_SIZE
+	hex "DDR4 size used to select correct initialization."
+	default 0x10000000
+endif
