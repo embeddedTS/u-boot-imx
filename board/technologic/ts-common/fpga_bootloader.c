@@ -533,7 +533,7 @@ static int do_fpgaboot(struct cmd_tbl *cmdtp, int flag, int argc,
 	return ret;
 }
 
-void board_flexspi_start()
+void board_flexspi_start(void)
 {
 	#if !defined(CONFIG_SPL_BUILD)
 	fpga_update_from_flash();
