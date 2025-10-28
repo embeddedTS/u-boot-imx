@@ -83,7 +83,6 @@ static int ts9370_gpio_probe(struct udevice *dev)
 	struct ts9370_gpio *priv = dev_get_priv(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	static int banknum;
-	int ret;
 	char name[18], *str;
 
 	priv->base = dev_read_addr_ptr(dev);
