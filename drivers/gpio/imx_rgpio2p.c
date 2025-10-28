@@ -153,10 +153,16 @@ static int imx_rgpio2p_probe(struct udevice *dev)
 	struct imx_rgpio2p_plat *plat = dev_get_plat(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	int banknum;
+	int ret;
 	char name[18], *str;
 
-	banknum = plat->bank_index;
-	sprintf(name, "GPIO%d_", banknum + 1);
+	ret = dev_read_alias_seq(dev, &banknum);
+	if (ret) {
+		banknum = plat->bank_index;
+	}
+	banknum++;
+
+	sprintf(name, "GPIO%d_", banknum);
 	str = strdup(name);
 	if (!str)
 		return -ENOMEM;
