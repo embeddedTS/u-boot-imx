@@ -969,6 +969,7 @@ dtb-$(CONFIG_ARCH_IMXRT) += imxrt1020-evk.dtb \
 	imxrt1170-evk.dtb
 
 dtb-$(CONFIG_TARGET_IMX93_TS9370) += imx93-ts9370.dtb
+dtb-$(CONFIG_TARGET_IMX93_TS9370) += imx93-ts9390.dtb
 
 dtb-$(CONFIG_RZA1) += \
 	r7s72100-genmai.dtb \
