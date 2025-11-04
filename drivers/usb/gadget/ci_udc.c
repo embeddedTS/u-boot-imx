@@ -1477,8 +1477,8 @@ static int ci_udc_otg_probe(struct udevice *dev)
 	ehci = (struct usb_ehci *)devfdt_get_addr(&priv->otgdev);
 
 	ret = pinctrl_select_state(&priv->otgdev, "default");
-	if (ret)
-		printf("Failed to configure default pinctrl\n");
+	if (ret && ret != -ENOSYS)
+		printf("Failed to configure default pinctrl (err=%d)\n", ret);
 
 #if defined(CONFIG_MX6)
 	if (usb_fused((u32)ehci)) {
