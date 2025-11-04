@@ -1,0 +1,6 @@
+embeddedTS i.MX93 Product Family (TS-4300)
+M:	Lionel D. Hummel <lionel@TechnologicSystems.com>
+S:	Maintained
+F:	board/freescale/ts4300/
+F:	include/configs/ts4300.h
+F:	configs/ts4300_defconfig

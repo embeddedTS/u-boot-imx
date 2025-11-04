@@ -1,0 +1,71 @@
+#ifndef __DTS_TS9370_PINFUNC_H
+#define __DTS_TS9370_PINFUNC_H
+
+/*
+ * Tuple layout per pin-function:
+ *   <pin_idx> <mux_mode> <highz_pin_idx> <highz_en>
+ *
+ *  - mux_mode 0-7  : output selects function_index 0-7
+ *  - highz_en == 1 : set the companion pin to high-Z
+ */
+
+#define TS9370_PAD_BT_RXD__UART6_TXD                  0x000 0x1 0x000 0x0
+#define TS9370_PAD_BT_CTS__UART6_RTS                  0x003 0x1 0x000 0x0
+#define TS9370_PAD_DP_19P2MHZ_CLK__DC_1               0x004 0x1 0x010 0x1
+#define TS9370_PAD_MIKRO_TXD__GPIO0_IO14              0x006 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_TXD__UART8_TXD               0x006 0x1 0x000 0x0
+#define TS9370_PAD_MIKRO_RXD__GPIO0_IO15              0x007 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_CLK__GPIO0_IO16          0x008 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_CLK__LPSPI4_CLK          0x008 0x1 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_CS___GPIO0_IO17          0x009 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_CS___LPSPI4_CS_MUX_1     0x009 0x1 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_MISO__GPIO0_IO18         0x00A 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_MOSI__GPIO0_IO19         0x00B 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_SPI_MOSI__LPSPI4_MOSI        0x00B 0x1 0x000 0x0
+#define TS9370_PAD_MIKRO_RESET___GPIO0_IO20           0x00C 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_AN__GPIO0_IO21               0x00D 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_PWM__GPIO0_IO22              0x00E 0x0 0x000 0x0
+#define TS9370_PAD_MIKRO_PWM__PWM0_OUT                0x00E 0x1 0x000 0x0
+#define TS9370_PAD_MIKRO_INT__GPIO0_IO23              0x00F 0x0 0x000 0x0
+#define TS9370_PAD_DC_1__GPIO2_IO27                   0x010 0x0 0x000 0x0
+#define TS9370_PAD_DC_1__UART7_TX                     0x010 0x1 0x000 0x0
+#define TS9370_PAD_DC_1__LPSPI4_CLK                   0x010 0x2 0x000 0x0
+#define TS9370_PAD_DC_3__GPIO2_IO28                   0x011 0x0 0x000 0x0
+#define TS9370_PAD_DC_5__GPIO2_IO29                   0x012 0x0 0x000 0x0
+#define TS9370_PAD_DC_5__UART7_RTS                    0x012 0x1 0x000 0x0
+#define TS9370_PAD_DC_5__LPSPI4_MOSI                  0x012 0x2 0x000 0x0
+#define TS9370_PAD_DC_7__GPIO2_IO30                   0x013 0x0 0x000 0x0
+#define TS9370_PAD_DC_7__LPSPI4_CS_MUX_2              0x013 0x1 0x000 0x0
+#define TS9370_PAD_DC_9__GPIO2_IO31                   0x014 0x0 0x000 0x0
+#define TS9370_PAD_EN_LS_OUT_1__GPIO2_IO17            0x019 0x0 0x000 0x0
+#define TS9370_PAD_EN_LS_OUT_2__GPIO2_IO18            0x01A 0x0 0x000 0x0
+#define TS9370_PAD_EN_LS_OUT_3__GPIO2_IO19            0x01B 0x0 0x000 0x0
+#define TS9370_PAD_EN_LS_OUT_4__GPIO2_IO20            0x01C 0x0 0x000 0x0
+#define TS9370_PAD_EN_HS_SW__GPIO2_IO16               0x01D 0x0 0x000 0x0
+#define TS9370_PAD_PRIM_485_TXD__UART7_TXD            0x01E 0x1 0x000 0x0
+#define TS9370_PAD_PRIM_485_TXEN__UART7_RTS           0x01F 0x1 0x000 0x0
+#define TS9370_PAD_SEC_485_TXEN__UART3_RTS            0x021 0x1 0x000 0x0
+#define TS9370_PAD_SEC_UART_TX__UART3_TXD             0x023 0x1 0x000 0x0
+#define TS9370_PAD_EN_GREEN_LED___GPIO0_IO0           0x024 0x0 0x000 0x0
+#define TS9370_PAD_EN_RED_LED___GPIO0_IO2             0x025 0x0 0x000 0x0
+#define TS9370_PAD_CODEC_CLK__PLL_CLK_OUT             0x027 0x1 0x000 0x0
+#define TS9370_PAD_NIM_RESET___GPIO0_IO4              0x028 0x0 0x000 0x0
+#define TS9370_PAD_NIM_CTS___GPIO0_IO5                0x029 0x0 0x000 0x0
+#define TS9370_PAD_NIM_PWR_ON___GPIO0_IO6             0x02A 0x0 0x000 0x0
+#define TS9370_PAD_NIM_TXD__GPIO0_IO10                0x02C 0x0 0x000 0x0
+#define TS9370_PAD_NIM_TXD__UART5_TXD                 0x02C 0x1 0x000 0x0
+#define TS9370_PAD_NIM_RXD__GPIO0_IO11                0x02D 0x0 0x000 0x0
+#define TS9370_PAD_UART3_RXD__SECOND_PORT_RXD_3V      0x031 0x1 0x000 0x0
+#define TS9370_PAD_UART5_RXD__NIM_RXD                 0x033 0x1 0x02D 0x1
+#define TS9370_PAD_UART6_RXD__BT_TXD                  0x034 0x1 0x001 0x1
+#define TS9370_PAD_UART6_CTS__BT_RTS                  0x035 0x1 0x002 0x1
+#define TS9370_PAD_UART7_RXD__PRIM_485_RXD_3V         0x036 0x1 0x000 0x0
+#define TS9370_PAD_UART7_RXD__DC_3                    0x036 0x2 0x011 0x1
+#define TS9370_PAD_UART7_RXD__SECOND_PORT_RXD_3V      0x036 0x3 0x000 0x0
+#define TS9370_PAD_UART7_CTS__DC_7                    0x037 0x1 0x013 0x1
+#define TS9370_PAD_UART8_RXD__MIKRO_RXD               0x038 0x1 0x007 0x1
+#define TS9370_PAD_LPSPI4_MISO_MUX_1__MIKRO_SPI_MISO  0x039 0x1 0x00A 0x1
+#define TS9370_PAD_LPSPI4_MISO_MUX_2__DC_3            0x03A 0x1 0x011 0x1
+#define TS9370_PAD_EN_BLUE_LED__GPIO0_IO3             0x03B 0x0 0x000 0x0
+
+#endif /* __DTS_TS9370_PINFUNC_H */
