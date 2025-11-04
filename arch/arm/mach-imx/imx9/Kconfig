@@ -202,6 +202,12 @@ config TARGET_IMX93W_FRDM
 	select REGMAP
 	select SYSCON
 	
+config TARGET_IMX93_TS4300
+	bool "imx93_ts4300"
+	select IMX93
+	select IMX9_LPDDR4X
+	select SUPPORT_EXTENSION_SCAN
+
 config TARGET_IMX93_TS9370
 	bool "imx93_ts9370"
 	select IMX93
@@ -366,6 +372,7 @@ source "board/nxp/imx95_evk/Kconfig"
 source "board/nxp/imx95_frdm/Kconfig"
 source "board/nxp/imx952_evk/Kconfig"
 source "board/nxp/imx952_frdm/Kconfig"
+source "board/technologic/ts4300/Kconfig"
 source "board/technologic/ts9370/Kconfig"
 source "board/technologic/ts9390/Kconfig"
 source "board/technologic/ts11000/Kconfig"
