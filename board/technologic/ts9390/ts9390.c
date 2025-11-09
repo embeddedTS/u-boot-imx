@@ -66,6 +66,21 @@ struct efi_capsule_update_info update_info = {
 
 #endif /* EFI_HAVE_CAPSULE_SUPPORT */
 
+void board_flexspi_start(void)
+{
+	#if !defined(CONFIG_SPL_BUILD)
+	fpga_update_from_flash();
+
+	if (!env_get("skip_fpga_reconfig")) {
+		print_fpga_version();
+		fpga_reconfig();
+	} else {
+		printf("Skipping FPGA reconfig\n");
+	}
+	print_fpga_version();
+	#endif
+}
+
 int board_early_init_f(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
