@@ -47,13 +47,13 @@ int do_bbdetect(void)
 		return ret;
     ret = setup_bbdetect_io("FPGA_GPIO0_00", true,  &s1);
 	if (ret)
-		goto out;
+		return ret;
     ret = setup_bbdetect_io("FPGA_GPIO2_19", true,  &s2);
 	if (ret)
-		goto out;
+		return ret;
     ret = setup_bbdetect_io("FPGA_GPIO3_19", false, &din);
 	if (ret)
-		goto out;
+		return ret;
 
     for (i = 0; i < 8; i++) {
         dm_gpio_set_value(&s0, (i & 1) ? 1 : 0);
@@ -71,7 +71,6 @@ int do_bbdetect(void)
     env_set_hex("baseboard_id",  (unsigned long)(id & ~0xC0));
     env_set_hex("baseboard_rev", (unsigned long)((id & 0xC0) >> 6));
 
-out:
     dm_gpio_free(NULL, &din);
     dm_gpio_free(NULL, &s2);
     dm_gpio_free(NULL, &s1);
