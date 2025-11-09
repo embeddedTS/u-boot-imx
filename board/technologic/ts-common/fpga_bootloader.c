@@ -546,22 +546,6 @@ static int do_fpgaboot(struct cmd_tbl *cmdtp, int flag, int argc,
 	return ret;
 }
 
-void board_flexspi_start(void)
-{
-	#if !defined(CONFIG_SPL_BUILD)
-	fpga_update_from_flash();
-
-	if (!env_get("skip_fpga_reconfig")) {
-		print_fpga_version();
-		fpga_reconfig();
-	} else {
-		printf("Skipping FPGA reconfig\n");
-	}
-	print_fpga_version();
-	#endif
-}
-
-
 U_BOOT_CMD(fpgaboot, 5, 1, do_fpgaboot, "fpga bootloader command",
 	   "info\n"
 	   "write addr len\n"

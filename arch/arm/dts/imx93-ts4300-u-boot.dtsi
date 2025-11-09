@@ -100,17 +100,18 @@
 };
 
 &fpga_gpio0 {
-	bootph-pre-ram;
 	bootph-some-ram;
 };
 
 &fpga_gpio1 {
-	bootph-pre-ram;
 	bootph-some-ram;
 };
 
 &fpga_gpio2 {
-	bootph-pre-ram;
+	bootph-some-ram;
+};
+
+&fpga_gpio3 {
 	bootph-some-ram;
 };
 
