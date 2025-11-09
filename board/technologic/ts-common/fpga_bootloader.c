@@ -214,6 +214,17 @@ bool fpga_is_bootloader(void)
 	return (model == 0xc0de);
 }
 
+static void flash_show_progress(u32 current_bytes, u32 total_bytes)
+{
+	static int last_percent = 0;
+	int current_percent = (int)(current_bytes * 100 / total_bytes);
+
+	if (current_percent != last_percent) {
+		printf("%d%%\r", current_percent);
+		last_percent = current_percent;
+	}
+}
+
 int flash_write(u32 flash_addr, u32 data_addr, u32 len)
 {
 	u32 data;
@@ -229,6 +240,8 @@ int flash_write(u32 flash_addr, u32 data_addr, u32 len)
 	       flash_addr, data_addr, len);
 
 	for (u32 i = 0; i < len; i += 4) {
+
+		flash_show_progress(i, len);
 		data = *(u32 *)(uintptr_t)(data_addr + i);
 		data = swap_bitstream_order(data);
 		writel(WORD_ADDRESS(flash_addr + i), UPDATER_ADDR);
