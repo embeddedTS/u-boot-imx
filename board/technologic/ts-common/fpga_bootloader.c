@@ -22,7 +22,7 @@
 
 #include "fpga_bootloader.h"
 
-#define FPGA_UPDATE_BLK (0x240000 / 512)
+#define FPGA_UPDATE_BLK (0x340000 / 512)
 #define FPGA_UPDATE_BLK_CNT (0x47000 / 512)
 
 static int erase_fit_from_flash(void)
