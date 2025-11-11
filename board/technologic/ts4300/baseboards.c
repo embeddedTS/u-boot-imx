@@ -51,6 +51,7 @@ int ts8551_mipi2dp_present(void)
 	struct udevice *bus;
 	struct gpio_desc reset = {0}; /* CN1_096 / DP_RESET -> GPIO6_17 */
 	uint32_t value;
+	int ret = 0;
 	int err;
 
 	/* Drive DP_RESET with DM GPIO: pulse high then low */
@@ -98,20 +99,17 @@ int ts8551_mipi2dp_present(void)
 	 * we can pass/fail just off i2c responding, otherwise we rely on the
 	 * expected id value from this chip. */
 	err = dm_i2c_read(chip, 0x500, (uint8_t *)&value, sizeof(value));
-	if (err){
-		return 0;
-	}
-
-	dm_gpio_free(NULL, &reset);
+	if (err)
+		goto out;
 
 	if (value == 0x6603)
-		return 1;
+		ret = 1;
 
 out:
 	dm_gpio_free(NULL, &reset);
 
 	/* Any errors mean the card is not present, return 0 not errs */
-	return 0;
+	return ret;
 }
 
 /*
