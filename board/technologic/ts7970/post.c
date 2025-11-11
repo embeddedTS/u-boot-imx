@@ -17,7 +17,6 @@
 #include <i2c.h>
 #include <status_led.h>
 #include <spi_flash.h>
-#include <usb.h>
 
 #include <miiphy.h>
 
@@ -42,7 +41,6 @@ iomux_v3_cfg_t const posttest_pads[] = {
 int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 int do_mem_mtest(cmd_tbl_t *cmdtp, int flag, int argc,
 			char * const argv[]);
-void do_usb_start(void);
 extern char board_rev(void);
 
 int fpga_test(void)
@@ -221,33 +219,6 @@ int mem_test(void)
 	if (ret == 0) printf("RAM test passed\n");
 	else printf("RAM test failed\n");
 	return ret;
-}
-
-int usbhub_test(void)
-{
-	int i;
-	struct usb_device *dev = NULL;
-
-	gpio_direction_output(IMX_GPIO_NR(2, 11), 0); // hub only needs 1us
-	udelay(1);
-	gpio_set_value(IMX_GPIO_NR(2, 11), 1);
-
-	do_usb_start();
-
-	for (i = 0; i < USB_MAX_DEVICE; i++) {
-		dev = usb_get_dev_index(i);
-		if (dev == NULL)
-			break;
-
-		if(dev->descriptor.idVendor == 0x424 &&
-		   dev->descriptor.idProduct == 0x2514) {
-		   	printf("USB test passed\n");
-			return 0;
-		}
-	}
-
-	printf("Did not find SMSC USB hub!\n");
-	return 1;
 }
 
 int is_quad(void)
@@ -449,7 +420,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				ret = 1;
 				printf("Silab rev is old or invalid\n");
 			}
-			ret |= usbhub_test();
 
 			break;
 		case 2: 
@@ -467,7 +437,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				ret = 1;
 				printf("Silab rev is old or invalid\n");
 			}
-			ret |= usbhub_test();
 
 			break;
 		case 3: /* */
@@ -486,8 +455,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 
-			ret |= usbhub_test();
-
 			break;
 		case 4:
 			printf("Build variant %d, TS-7970-2G-4GF-Q10S-RTC-CP-WIFI-E \n", build_variant);
@@ -505,7 +472,6 @@ static int do_post_test(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 				printf("Silab rev is old or invalid\n");
 			}
 
-			ret |= usbhub_test();
 			break;
 		case 13:
 			printf("Build variant %d, CUSTOM3\n", build_variant);
