@@ -154,7 +154,7 @@ int board_late_init(void)
 	env_set_hex("bom_straps", bom_straps);
 
 	if (IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)) {
-		env_set("board_name", "TS-9370");
+		env_set("board_name", "TS-4300");
 		env_set("board_rev", get_board_version_str());
 	}
 
