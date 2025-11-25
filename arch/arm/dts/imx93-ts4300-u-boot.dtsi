@@ -32,6 +32,15 @@
 			method = "smc";
 		};
 	};
+
+	reg_en_usb_host_5v: regulator-host1-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "EN_USB_HOST_5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&fpga_gpio0 5 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
 };
 
 &A55_0 {
@@ -193,10 +202,12 @@
 
 &usbotg1 {
 	status = "okay";
+	vbus-supply = <&reg_en_usb_host_5v>;
 };
 
 &usbotg2 {
 	status = "okay";
+	vbus-supply = <&reg_en_usb_host_5v>;
 };
 
 &s4muap {
