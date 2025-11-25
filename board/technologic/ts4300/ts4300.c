@@ -133,6 +133,42 @@ int board_init(void)
 	return 0;
 }
 
+void pulse_off_bd_reset(void)
+{
+	struct gpio_desc desc;
+	int ret;
+
+	ret = dm_gpio_lookup_name("FPGA_GPIO0_06", &desc);
+	if (ret) {
+		printf("Could not find GPIO: FPGA_GPIO0_06\n");
+		return;
+	}
+
+	ret = dm_gpio_request(&desc, "OFF_BD_RESET#");
+	if (ret) {
+		printf("Could not request GPIO: FPGA_GPIO0_06\n");
+		return;
+	}
+
+	ret = dm_gpio_set_dir_flags(&desc, GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE | GPIOD_ACTIVE_LOW);
+	if (ret) {
+		printf("Could not set GPIO to input: FPGA_GPIO0_06\n");
+		goto out;
+	}
+
+	/* Pulse OFF_BD_RESET# low for 1ms, then high */
+	mdelay(1);
+
+	ret = dm_gpio_clrset_flags(&desc, GPIOD_IS_OUT_ACTIVE, 0);
+	if (ret) {
+		printf("Could not set GPIO to input: FPGA_GPIO0_06\n");
+		goto out;
+	}
+
+out:
+	dm_gpio_free(NULL, &desc);
+}
+
 int board_late_init(void)
 {
 	struct udevice *led;
@@ -159,6 +195,7 @@ int board_late_init(void)
 	}
 
 	do_bbdetect();
+	pulse_off_bd_reset();
 
 	if (!led_get_by_label("red:status", &led))
 		led_set_state(led, LEDST_ON);
