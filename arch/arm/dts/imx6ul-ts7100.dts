@@ -375,10 +375,6 @@
 	status = "disabled";
 };
 
-&wdog1 {
-	status = "disabled";
-};
-
 &weim {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_weim_fpga &pinctrl_weim_cs0>;
