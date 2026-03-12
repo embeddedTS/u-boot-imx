@@ -125,6 +125,10 @@ static iomux_v3_cfg_t const uart1_pads[] = {
 	MX6_PAD_UART1_RX_DATA__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
+static iomux_v3_cfg_t const wdog_pads[] = {
+	MX6_PAD_LCD_RESET__WDOG1_WDOG_ANY | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
@@ -274,6 +278,7 @@ static int setup_fec(void)
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
+	imx_iomux_v3_setup_multiple_pads(wdog_pads, ARRAY_SIZE(wdog_pads));
 
 	imx_iomux_v3_setup_multiple_pads(fpga_jtag_pads,
 					 ARRAY_SIZE(fpga_jtag_pads));
