@@ -56,6 +56,10 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
+static iomux_v3_cfg_t const wdog_pads[] = {
+	MX6_PAD_LCD_RESET__WDOG1_WDOG_ANY | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
 int is_mfg(void)
 {
 	return is_boot_from_usb();
@@ -228,6 +232,7 @@ int board_init(void)
 {
 	/* Address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+	imx_iomux_v3_setup_multiple_pads(wdog_pads, ARRAY_SIZE(wdog_pads));
 
 #ifdef CONFIG_FEC_MXC
 	reset_phy();

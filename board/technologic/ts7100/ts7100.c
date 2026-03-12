@@ -179,6 +179,10 @@ static iomux_v3_cfg_t const misc_pads[] = {
 	MX6_PAD_SNVS_TAMPER9__GPIO5_IO09 | MUX_PAD_CTRL(MISC_PAD_CTRL),
 };
 
+static iomux_v3_cfg_t const wdog_pads[] = {
+	MX6_PAD_LCD_RESET__WDOG1_WDOG_ANY | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 static void setup_iomux_uart(void)
 {
@@ -464,6 +468,8 @@ int board_early_init_f(void)
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 	setup_iomux_uart();
 #endif
+
+	imx_iomux_v3_setup_multiple_pads(wdog_pads, ARRAY_SIZE(wdog_pads));
 
 	imx_iomux_v3_setup_multiple_pads(fpga_jtag_pads,
 		ARRAY_SIZE(fpga_jtag_pads));
