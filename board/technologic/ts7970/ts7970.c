@@ -681,7 +681,13 @@ int board_init(void)
 int board_late_init(void)
 {
 	char rev = board_rev();
-	if(rev >= 'D') {
+	if (rev >= 'J') {
+		imx_iomux_v3_setup_multiple_pads(usdhc1_pads,
+			ARRAY_SIZE(usdhc1_pads));
+		gpio_direction_output(TS7970_BT_EN, 0);
+		udelay(1);
+		gpio_direction_output(TS7970_BT_EN, 1);
+	} else if (rev >= 'D') {
 		gpio_direction_output(TS7970_WIFI_EN, 0);
 		gpio_direction_output(TS7970_BT_EN, 0);
 		gpio_direction_input(TS7970_SD1_D0);
