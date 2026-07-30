@@ -76,6 +76,11 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_DSE_40ohm     | PAD_CTL_SRE_FAST | PAD_CTL_PUE |\
 	PAD_CTL_PUS_100K_UP)
 
+/* On soft reset, the iomux is not being reset for the resistor strap
+ * gpios, causing incorrect readings.  These represent the alleged reset
+ * values for the iomux registers */
+#define STRAP_PAD_CTRL (PAD_CTL_PKE | PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm)
+
 #define EN_FPGA_PWR             IMX_GPIO_NR(5, 2)
 #define FPGA_RESETN             IMX_GPIO_NR(4, 11)
 #define JTAG_FPGA_TDO           IMX_GPIO_NR(5, 4)
@@ -618,6 +623,15 @@ void setup_spi(void)
 	  ARRAY_SIZE(ecspi4_pads));
 }
 
+iomux_v3_cfg_t const resistor_strap_pads[] = {
+	/* UART3_TXD */
+	MX6_PAD_UART3_TX_DATA__GPIO1_IO24 | MUX_PAD_CTRL(STRAP_PAD_CTRL),
+	/* UART4_TXD */
+	MX6_PAD_UART4_TX_DATA__GPIO1_IO28 | MUX_PAD_CTRL(STRAP_PAD_CTRL),
+	/* UART7_TXD */
+	MX6_PAD_LCD_DATA16__GPIO3_IO21 |  MUX_PAD_CTRL(STRAP_PAD_CTRL),
+};
+
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
@@ -630,6 +644,11 @@ int board_early_init_f(void)
 	gpio_direction_input(JTAG_FPGA_TCK);
 	gpio_direction_input(JTAG_FPGA_TMS);
 	gpio_direction_input(JTAG_FPGA_TDO);
+
+	/* Make sure the resistor strap gpios are set to reset values.
+	 * iomux registers are not reset on soft reboot */
+	imx_iomux_v3_setup_multiple_pads(resistor_strap_pads,
+					 ARRAY_SIZE(resistor_strap_pads));
 
 	/* Enable LVDS clock output.
 	 * Writing CCM_ANALOG_MISC1 to use output from 24M OSC */
