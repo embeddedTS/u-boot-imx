@@ -83,14 +83,36 @@ const char get_cpu_board_version_char(void)
 	return rev;
 }
 
+/* These are ordered from bit 0, to highest bit */
+static unsigned io_opts_gpio[] = {
+	NAND_CE0_B,
+	UART2_TX_DATA,
+	UART5_TX_DATA,
+	UART4_TX_DATA,
+};
+
+static unsigned io_model_gpio[] = {
+	UART3_TX_DATA,
+	LCD_DATA08,
+	NAND_CE1_B,
+	UART3_CTS_B,
+};
+
+static unsigned cpu_opts_fpga_bank2[] = {
+	3, // B8 pad
+	4, // C9 pad
+	5, // C8 pad
+};
+
 /*
  * This board has resistor straps to detect different pcb/assembly options
  * cpu_straps - Which SOM is in use
  * 	cpu_straps[2:0] = {R34, R28, R29}
- * io_model - Which carrier board is in use (last 2 bits do not have a defined resistor)
- * 	io_model[3:0] = {UART3_CTS_B, NAND_CE1_B, R156, R151}
+ * io_model - Which carrier board is in use
+ * 	io_model[3:0] = {R160, R157, R156, R151}
  * io_opts - Can be use to detect different population options
  * 	io_opts[3:0] = {R152, R153, R154, R155}
+ *
  * Each of these are set to 1 when the resistor is populated
  * See the Schematic for the full table of variants
  */
@@ -101,6 +123,7 @@ int board_read_straps(uint32_t *cpu_straps, uint32_t *io_opts, uint32_t *io_mode
 	static uint32_t saved_io_model;
 	static bool read = 0;
 	uint32_t fpga_straps;
+	int i;
 
 	if (!read) {
 		*io_opts = 0;
@@ -110,43 +133,36 @@ int board_read_straps(uint32_t *cpu_straps, uint32_t *io_opts, uint32_t *io_mode
 
 		// CPU straps are on FPGA GPIO bank 2:
 		fpga_straps = readw(0x50004050);
-		if (fpga_straps & (1 << 3)) // B8 pad
-			*cpu_straps |= (1 << 0); // R29
-		if (fpga_straps & (1 << 4)) // C9 Pad
-			*cpu_straps |= (1 << 1); // R28
-		if (fpga_straps & (1 << 5)) // C8 Pad
-			*cpu_straps |= (1 << 2); // R34
-		*cpu_straps ^= 0x7; /* 1 = populated */
+		for (i = 0; i < ARRAY_SIZE(cpu_opts_fpga_bank2); i ++) {
+			if (fpga_straps & BIT(cpu_opts_fpga_bank2[i]))
+				*cpu_straps |= BIT(i);
+		}
+		/* 1 == populated */
+		*cpu_straps ^= GENMASK(ARRAY_SIZE(cpu_opts_fpga_bank2)-1, 0);
 
-		gpio_request(NAND_CE0_B, "NAND_CE0_B");
-		gpio_request(UART2_TX_DATA, "UART2_TX_DATA");
-		gpio_request(UART5_TX_DATA, "UART5_TX_DATA");
-		gpio_request(UART4_TX_DATA, "UART4_TX_DATA");
-		gpio_request(UART3_TX_DATA, "UART3_TX_DATA");
-		gpio_request(NAND_CE1_B, "NAND_CE1_B");
-		gpio_request(LCD_DATA08, "LCD_DATA08");
-		gpio_request(UART3_CTS_B, "UART3_CTS_B");
+		/* Requst all needed CPU pins */
+		for (i = 0; i < ARRAY_SIZE(io_opts_gpio); i++) {
+			gpio_request(io_opts_gpio[i], "strap");
+			gpio_direction_input(io_opts_gpio[i]);
+		}
 
-		gpio_direction_input(NAND_CE0_B);
-		gpio_direction_input(UART2_TX_DATA);
-		gpio_direction_input(UART5_TX_DATA);
-		gpio_direction_input(UART4_TX_DATA);
-		gpio_direction_input(UART3_TX_DATA);
-		gpio_direction_input(NAND_CE1_B);
-		gpio_direction_input(LCD_DATA08);
-		gpio_direction_input(UART3_CTS_B);
+		for (i = 0;, i < ARRAY_SIZE(io_model_gpio); i++) {
+			gpio_request(io_model_gpio[i], "strap");
+			gpio_direction_input(io_model_gpio[i]);
+		}
 
-		*io_opts |= (gpio_get_value(NAND_CE0_B) << 0); // R155
-		*io_opts |= (gpio_get_value(UART2_TX_DATA) << 1); // R154
-		*io_opts |= (gpio_get_value(UART5_TX_DATA) << 2); // R153
-		*io_opts |= (gpio_get_value(UART4_TX_DATA) << 3); // R152
-		*io_opts ^= 0xf; /* 1 = populated */
+		/* Read pins */
+		for (i = 0; i < ARRAY_SIZE(io_opts_gpio); i++) {
+			*io_opts |= gpio_get_value(io_opts_gpio[i]) << i;
+		}
+		/* 1 == populated */
+		*io_opts ^= GENMASK(ARRAY_SIZE(io_opts_gpio)-1, 0);
 
-		*io_model |= (gpio_get_value(UART3_TX_DATA) << 0); // R151
-		*io_model |= (gpio_get_value(LCD_DATA08) << 1); // R156
-		*io_model |= (gpio_get_value(NAND_CE1_B) << 2); // Reserved
-		*io_model |= (gpio_get_value(UART3_CTS_B) << 3); // Reserved
-		*io_model ^= 0xf; /* 1 = populated */
+		for (i = 0; i < ARRAY_SIZE(io_model_gpio); i++) {
+			*io_model |= gpio_get_value(io_model_gpio[i]) << i;
+		}
+		/* 1 == populated */
+		*io_model ^= GENMASK(ARRAY_SIZE(io_model_gpio)-1, 0);
 
 		read = 1;
 		saved_cpu_straps = *cpu_straps;
