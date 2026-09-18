@@ -55,31 +55,91 @@ const char *get_board_name(void)
 	}
 }
 
+/* Starting from Rev C schematic, a table was defined of all current and future
+ * PCB revisions.
+ *
+ * These rely on reading specific GPIO pins that are tied to ground or V+ in
+ * a look-up table to determine revision.
+ *
+ * The following was pulled from the Rev C schematic on 20260908:
+ *
+ * CPU Ball    FPGA Balls  0 = GND, 1 = NC/V+/Floating
+ * N15         G3      C4      G12     Rev
+ * 1           1       1       0       Rev A
+ * 0           1       1       0       Rev B
+ * 0           1       0       1       Rev C
+ * 0           1       0       0       Rev D
+ * 0           0       1       1       Rev E
+ * 0           0       1       0       Rev F
+ * 0           0       0       1       Rev G
+ * 0           0       0       0       Rev H
+ *
+ * Table Bit:  2       1       0
+ *
+ * If additional revisions are needed, N15 can be extended as an upper bit
+ *
+ * Note that, on Rev A PCBs, reading the FPGA balls are invalid. While G12
+ * is connected in the FPGA register, G3 and C4 are not connected until
+ * Rev C. Rev B never was produced.
+ */
+struct fpga_strap_regs {
+	u32 addr;
+	u32 bit;
+};
+
+/* In bit order of the final table, from 0 to highest bit */
+/* 0x4050 is bank 2 (0 indexed)
+ *   bit 15: ball G12
+ * 0x4040 is bank 1 (0 indexed)
+ *   bit 15: ball G3
+ *   bit 14: ball C4
+ */
+static struct fpga_strap_regs fpga_strap_regs[] = {
+	{ 0x50004050, 15 },
+	{ 0x50004040, 14 },
+	{ 0x50004040, 15 },
+};
+
 const char get_cpu_board_version_char(void)
 {
-	uint16_t fpga_straps = readw(0x50004050);
-	char rev = '0';
+	uint8_t table = 0;
+	char rev;
+	int i;
 
 	imx_iomux_v3_setup_multiple_pads(rev_pads, ARRAY_SIZE(rev_pads));
 	gpio_request(JTAG_TDO_N15, "JTAG_TDO_N15");
 	gpio_direction_input(JTAG_TDO_N15);
 
-	/*
-	 * Any board rev newer than the newest here in this version of
-	 * U-Boot *should* appear to be the newest board rev mentioned
-	 * below (barring the unexpected):
+	/* We can quickly check for Rev A, if N15 is high, its Rev A */
+	if (gpio_get_value(JTAG_TDO_N15))
+		return 'A';
+
+	/* Otherwise, we look up the rev from the table of straps.
+	 * First, build the table.
 	 */
-	if (gpio_get_value(JTAG_TDO_N15) == 0) {
-		rev = 'B';
-	} else if ((fpga_straps & (1 << 12)) == 0) {
-		rev = 'A';
+	for (i = 0; i < ARRAY_SIZE(fpga_strap_regs); i ++) {
+		if (readw(fpga_strap_regs[i].addr) & BIT(fpga_strap_regs[i].bit))
+			table |= BIT(i);
+	}
+	/* Since straps are nonpop = 1, invert them */
+	table ^= GENMASK(ARRAY_SIZE(fpga_strap_regs)-1, 0);
+
+	switch (table) {
+		case 0x01: rev = 'B'; break;
+		case 0x02: rev = 'C'; break;
+		case 0x03: rev = 'D'; break;
+		case 0x04: rev = 'E'; break;
+		case 0x05: rev = 'F'; break;
+		case 0x06: rev = 'G'; break;
+		case 0x07: rev = 'H'; break;
+		/*
+		 * If we reach this point, there is a problem with reading the
+		 * hardware. Return an invalid revision character to flag
+		 * attention on the boot screen and that compares lower than 'A'.
+		 */
+		default:   rev = '0'; break;
 	}
 
-	/*
-	 * If we reach this point, there is a problem with reading the
-	 * hardware.  Return an invalid revision character to flag
-	 * attention on the boot screen and that compares lower than 'A'.
-	 */
 	return rev;
 }
 
