@@ -99,15 +99,16 @@ static unsigned io_model_gpio[] = {
 };
 
 static unsigned cpu_opts_fpga_bank2[] = {
-	3, // B8 pad
-	4, // C9 pad
-	5, // C8 pad
+	3, // B8 pad / R29
+	4, // C9 pad / R28
+	5, // C8 pad / R34
+	1, // M12 pad / R27
 };
 
 /*
  * This board has resistor straps to detect different pcb/assembly options
  * cpu_straps - Which SOM is in use
- * 	cpu_straps[2:0] = {R34, R28, R29}
+ * 	cpu_straps[3:0] = {R27, R34, R28, R29}
  * io_model - Which carrier board is in use
  * 	io_model[3:0] = {R160, R157, R156, R151}
  * io_opts - Can be use to detect different population options
@@ -115,6 +116,15 @@ static unsigned cpu_opts_fpga_bank2[] = {
  *
  * Each of these are set to 1 when the resistor is populated
  * See the Schematic for the full table of variants
+ *
+ *
+ * IMPORTANT NOTE!
+ * cpu_strap[3] is not hooked up in older FPGA revisions. Ultimately, the value
+ * of that bit read from the FPGA may change between builds. It is only after
+ * FPGA Rev ~38 that this bit is valid. This U-Boot code will always return the
+ * value of that bit and doesn't care about the FPGA revision. It is up to higher
+ * level processes to determine, based on the board model, PCB rev, FPGA rev, etc.
+ * if that bit is valid or not. That is not the job of U-Boot at this point.
  */
 int board_read_straps(uint32_t *cpu_straps, uint32_t *io_opts, uint32_t *io_model)
 {
