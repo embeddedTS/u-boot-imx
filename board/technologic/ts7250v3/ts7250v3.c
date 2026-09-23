@@ -302,7 +302,8 @@ static int fixup_ism330(void *blob, bd_t *bd)
 			printf("fixup_ism330: Unknown whoami (0x%X)\n", value);
 			return 1;
 	}
-	return fdt_find_and_setprop(blob, fdtpath, "compatible", compatible, strlen(compatible), 0);
+	return fdt_find_and_setprop(blob, fdtpath, "compatible", compatible,
+				    strlen(compatible) + 1, 0);
 }
 
 int ft_board_setup(void *blob, bd_t *bd)
