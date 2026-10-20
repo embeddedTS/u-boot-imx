@@ -236,7 +236,10 @@ static void spl_dram_init(void)
 	uint32_t reg = readl(FPGA_SYSCON + 0x50);
 
 	mx6ul_dram_iocfg(16, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	if ((reg & 0x4) && ((reg & 0x2) == 0)) {
+	/*
+	 * C6 RAM strap: R36 pulldown populated = 1GB, depopulated = 512 MB
+	 */
+	if (reg & BIT(2)) {
 		/* 4Gb Alliance AS4C256M16D3LB */
 		mx6_dram_cfg(&ts7100_sysinfo,
 			     &ts7100_512m_calibration,
