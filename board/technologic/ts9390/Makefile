@@ -5,7 +5,7 @@
 #
 
 obj-y += ts9390.o
-obj-y += ../../../board/freescale/common/
+obj-y += ../../../board/nxp/common/
 
 ifdef CONFIG_SPL_BUILD
 obj-y += spl.o

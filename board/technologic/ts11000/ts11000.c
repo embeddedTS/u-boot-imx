@@ -16,7 +16,7 @@
 #include <asm/gpio.h>
 #include <power/regulator.h>
 #include <scmi_agent.h>
-#include "../dts/upstream/src/arm64/freescale/imx95-power.h"
+#include "../dts/upstream/src/arm64/nxp/imx95-power.h"
 #include <asm/arch/sys_proto.h>
 #include <i2c.h>
 #include <dm/uclass.h>
